@@ -32,6 +32,13 @@ export async function onRequestPost(context) {
       return json({ erro: "Chaves de API não configuradas no servidor." }, 500);
     }
 
+    // trava de acesso: se APP_PASSWORD estiver setada, exige a senha no header
+    const appPass = readKey(env, "APP_PASSWORD");
+    if (appPass) {
+      const sent = request.headers.get("x-app-pass") || "";
+      if (sent !== appPass) return json({ erro: "Senha incorreta." }, 401);
+    }
+
     const form = await request.formData();
     const file = form.get("audio");
     if (!file) return json({ erro: "Nenhum áudio recebido." }, 400);

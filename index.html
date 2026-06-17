@@ -265,6 +265,13 @@ body {
 
 .footer { font-family: var(--font-display); text-align: center; color: var(--text-dim); font-size: 7.5pt; padding: 18px 0 4px; letter-spacing: 1.5px; }
 
+.gate { position: fixed; inset: 0; z-index: 100; background: rgba(7,10,18,0.92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.gate-card { width: 100%; max-width: 320px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xl); padding: 28px 22px; text-align: center; box-shadow: 0 24px 70px rgba(0,0,0,0.55); }
+.gate-title { font-family: var(--font-display); font-size: 15pt; font-weight: 700; background: var(--grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.gate-sub { color: var(--text-soft); font-size: 8.5pt; margin: 6px 0 18px; }
+.gate-input { width: 100%; padding: 12px 14px; border-radius: var(--r-md); border: 1px solid var(--border); background: rgba(0,0,0,0.3); color: var(--text); font-family: var(--font-body); font-size: 11pt; margin-bottom: 12px; outline: none; }
+.gate-input:focus { border-color: var(--violet); }
+.gate-err { color: var(--erro); font-size: 8pt; margin-top: 10px; }
 .hidden { display: none !important; }
 
 @media (min-width: 768px) {
@@ -279,6 +286,15 @@ body {
 </head>
 <body>
 <div class="wrap">
+  <div id="gate" class="gate hidden">
+    <div class="gate-card">
+      <div class="gate-title">Fala direito!</div>
+      <p class="gate-sub">Digite a senha para entrar.</p>
+      <input id="gatePass" type="password" placeholder="Senha" class="gate-input" autocomplete="current-password" />
+      <button id="gateBtn" class="btn-sec" style="width:100%;">Entrar</button>
+      <div id="gateErr" class="gate-err hidden">Senha incorreta.</div>
+    </div>
+  </div>
   <div class="app">
 
     <div class="header">
@@ -333,7 +349,7 @@ body {
 
     </div>
   </div>
-  <div class="footer">FALA DIREITO! · FASE 1 · v0.1</div>
+  <div class="footer">FALA DIREITO! · FASE 1 · v0.2</div>
 </div>
 
 <script>
@@ -345,6 +361,7 @@ let stream = null;
 let segundos = 0;
 let timerInt = null;
 let gravando = false;
+let APP_PASS = localStorage.getItem("fd_pass") || "";
 
 const el = (id) => document.getElementById(id);
 
@@ -414,7 +431,8 @@ async function enviarAudio() {
 
   try {
     el("procPasso").textContent = "Transcrevendo + julgando…";
-    const resp = await fetch(ENDPOINT, { method: "POST", body: fd });
+    const resp = await fetch(ENDPOINT, { method: "POST", headers: { "x-app-pass": APP_PASS }, body: fd });
+    if (resp.status === 401) { sairAcesso("Senha incorreta. Entre de novo."); return; }
     const dados = await resp.json().catch(() => ({}));
     if (!resp.ok) throw new Error((dados && dados.erro) ? dados.erro : ("HTTP " + resp.status));
     renderResultado(dados);
@@ -475,6 +493,33 @@ function renderResultado(d) {
     });
   }
 }
+
+// ---- trava de acesso por senha ----
+function showGate(msg) {
+  el("gate").classList.remove("hidden");
+  el("gateErr").classList.toggle("hidden", !msg);
+  if (msg) el("gateErr").textContent = msg;
+}
+function hideGate() { el("gate").classList.add("hidden"); }
+function sairAcesso(msg) {
+  APP_PASS = "";
+  try { localStorage.removeItem("fd_pass"); } catch (e) {}
+  mostrarTela("gravador");
+  showGate(msg || "");
+}
+async function tentarEntrar() {
+  const p = el("gatePass").value.trim();
+  if (!p) return;
+  try {
+    const r = await fetch("/api/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ senha: p }) });
+    const d = await r.json().catch(() => ({}));
+    if (d.ok) { APP_PASS = p; try { localStorage.setItem("fd_pass", p); } catch (e) {} el("gateErr").classList.add("hidden"); hideGate(); }
+    else { showGate(d.erro || "Senha incorreta."); }
+  } catch (e) { showGate("Erro ao validar. Tente de novo."); }
+}
+el("gateBtn").addEventListener("click", tentarEntrar);
+el("gatePass").addEventListener("keydown", (e) => { if (e.key === "Enter") tentarEntrar(); });
+if (!APP_PASS) showGate();
 
 el("btnRec").addEventListener("click", () => { gravando ? pararGravacao() : iniciarGravacao(); });
 el("btnNova").addEventListener("click", () => {
