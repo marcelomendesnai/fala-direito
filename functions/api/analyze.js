@@ -131,11 +131,12 @@ function analisarFalante(utterances) {
   const minutos = msFalando / 60000;
   const ritmo_ppm = minutos > 0 ? Math.round(palavras / minutos) : 0;
 
-  let pausasLongas = 0;
+  let pausasLongas = 0, maiorMs = 0;
   for (let i = 1; i < todasPalavras.length; i++) {
     const gap = todasPalavras[i].start - todasPalavras[i - 1].end;
-    if (gap > 1500) pausasLongas++;
+    if (gap > 1200) { pausasLongas++; if (gap > maiorMs) maiorMs = gap; }
   }
+  const maiorPausaS = (maiorMs / 1000).toFixed(1);
 
   const txt = " " + falaMarcelo.toLowerCase() + " ";
   let hesitacao = 0;
@@ -149,7 +150,7 @@ function analisarFalante(utterances) {
     falaMarcelo,
     metricas: {
       ritmo_ppm,
-      pausas: pausasLongas + (pausasLongas === 1 ? " pausa longa" : " pausas longas"),
+      pausas: pausasLongas ? `${pausasLongas} (maior ${maiorPausaS}s)` : "nenhuma longa",
       hesitacao,
     },
   };
@@ -178,7 +179,8 @@ INSTRUÇÕES DE SAÍDA:
 - Para erros, dê a reescrita melhor (curta, no estilo das regras).
 - Gere reflexões da Parte B SÓ quando houver gatilho verbal no texto. Reflexão é PERGUNTA, nunca afirmação sobre o corpo.
 - Seja econômico: só itens com evidência real. Não force 13 itens.
-- Métricas já calculadas (use só pra contextualizar, não recalcule): ritmo ${metricas.ritmo_ppm} ppm, ${metricas.pausas}, ${metricas.hesitacao} muletas.
+- Métricas já calculadas (use só pra contextualizar, não recalcule): ritmo ${metricas.ritmo_ppm} ppm, pausas longas ${metricas.pausas}, ${metricas.hesitacao} muletas.
+- RITMO E PAUSAS: comente sempre o ritmo e as pausas no resumo. Uma pausa pode ser ESTRATÉGICA (boa — segurar o silêncio, A6) ou TRAVAMENTO/insegurança (ruim — ligado à Parte B). Se for relevante, gere um item sob A6/A7 e/ou uma reflexão sobre isso.
 
 Responda APENAS com JSON válido, sem markdown, neste formato exato:
 {
