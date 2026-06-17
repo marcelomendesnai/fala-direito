@@ -10,8 +10,9 @@ export async function onRequestGet(context) {
   try { env_keys = Object.keys(env || {}); } catch (e) {}
   return new Response(JSON.stringify({
     ok: true,
-    assembly_key_set: !!readKey(env, "ASSEMBLYAI_API_KEY"),
+    eleven_key_set: !!readKey(env, "ELEVENLABS_API_KEY"),
     anthropic_key_set: !!readKey(env, "ANTHROPIC_API_KEY"),
+    app_password_set: !!readKey(env, "APP_PASSWORD"),
     env_keys,
   }), { headers: { "content-type": "application/json" } });
 }
