@@ -331,6 +331,7 @@ body {
             <button data-r="rigido">Rígido</button>
           </div>
         </div>
+        <div class="hint" id="dicaVoz" style="margin-top:10px;">Comece dizendo <b>"ok"</b> pra eu reconhecer sua voz.</div>
         <div class="aviso hidden" id="avisoMic">
           <b>Microfone bloqueado.</b> Libere o acesso ao microfone no navegador. A gravação só funciona no site publicado (HTTPS), não abrindo o arquivo direto.
         </div>
@@ -366,7 +367,7 @@ body {
 
     </div>
   </div>
-  <div class="footer">FALA DIREITO! · FASE 1 · v0.13</div>
+  <div class="footer">FALA DIREITO! · FASE 1 · v0.14</div>
 </div>
 
 <script>
@@ -464,6 +465,7 @@ async function enviarAudio() {
   const fd = new FormData();
   fd.append("audio", blob, "gravacao.webm");
   fd.append("rigor", RIGOR);
+  fd.append("marker", "ok");
 
   try {
     el("procPasso").textContent = "Transcrevendo + julgando…";
@@ -490,6 +492,10 @@ function renderResultado(d) {
 
   const mWrap = el("metricas");
   mWrap.innerHTML = "";
+  if (d.voce) {
+    const via = d.voce.como === "marcador" ? "" : " (auto)";
+    mWrap.innerHTML += `<span class="m">🎙️ você = Locutor ${d.voce.locutor}${via}</span>`;
+  }
   if (d.metricas) {
     const m = d.metricas;
     if (m.ritmo_ppm)  mWrap.innerHTML += `<span class="m">🏃 ${m.ritmo_ppm} ppm</span>`;

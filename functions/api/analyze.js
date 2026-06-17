@@ -42,6 +42,7 @@ export async function onRequestPost(context) {
     const form = await request.formData();
     const file = form.get("audio");
     const rigor = (form.get("rigor") || "medio").toString();
+    const marker = (form.get("marker") || "ok").toString();
     if (!file) return json({ erro: "Nenhum áudio recebido." }, 400);
     const audioBytes = await file.arrayBuffer();
 
@@ -77,7 +78,7 @@ export async function onRequestPost(context) {
       return json({ erro: "Não consegui separar falas. Áudio muito curto ou sem voz clara?" }, 422);
     }
 
-    const { falanteMarcelo, falaMarcelo, metricas } = analisarFalante(utterances);
+    const { falanteMarcelo, falaMarcelo, metricas, comoIdentificou } = analisarFalante(utterances, marker);
     const veredicto = await chamarJuiz(falaMarcelo, metricas, anthropicKey, rigor);
 
     const itens = veredicto.itens || [];
@@ -90,6 +91,7 @@ export async function onRequestPost(context) {
       metricas,
       itens,
       reflexoes: veredicto.reflexoes || [],
+      voce: { locutor: falanteMarcelo, como: comoIdentificou },
       _debug: { falante_marcelo: falanteMarcelo, total_falantes: contarFalantes(utterances) },
     });
   } catch (e) {
@@ -109,16 +111,29 @@ async function aguardarTranscricao(id, key) {
   return { status: "error", error: "tempo esgotado no polling" };
 }
 
-function analisarFalante(utterances) {
+function analisarFalante(utterances, marker) {
+  // dominante (fallback): quem mais falou
   const porFalante = {};
   for (const u of utterances) {
     const n = (u.text || "").trim().split(/\s+/).filter(Boolean).length;
     porFalante[u.speaker] = (porFalante[u.speaker] || 0) + n;
   }
-  const falanteMarcelo = Object.entries(porFalante).sort((a, b) => b[1] - a[1])[0][0];
+  const dominante = Object.entries(porFalante).sort((a, b) => b[1] - a[1])[0][0];
+
+  // marcador: o 1o locutor que disser a palavra-chave (ex: "ok") e o Marcelo
+  let falanteMarcelo = null, comoIdentificou = "dominante";
+  const reMark = marker ? new RegExp("\\b" + marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i") : null;
+  if (reMark) {
+    for (const u of utterances) {
+      if (reMark.test(u.text || "")) { falanteMarcelo = u.speaker; comoIdentificou = "marcador"; break; }
+    }
+  }
+  if (!falanteMarcelo) falanteMarcelo = dominante;
 
   const minhas = utterances.filter((u) => u.speaker === falanteMarcelo);
-  const falaMarcelo = minhas.map((u) => u.text).join(" ").trim();
+  let falaMarcelo = minhas.map((u) => u.text).join(" ").trim();
+  // remove a 1a ocorrencia do marcador (a calibracao) pra nao sujar a analise
+  if (reMark) falaMarcelo = falaMarcelo.replace(reMark, "").trim();
 
   let msFalando = 0;
   let palavras = 0;
@@ -148,6 +163,7 @@ function analisarFalante(utterances) {
   return {
     falanteMarcelo,
     falaMarcelo,
+    comoIdentificou,
     metricas: {
       ritmo_ppm,
       pausas: pausasLongas ? `${pausasLongas} (maior ${maiorPausaS}s)` : "nenhuma longa",
