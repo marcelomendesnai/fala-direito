@@ -97,13 +97,13 @@ export async function onRequestPost(context) {
 }
 
 async function aguardarTranscricao(id, key) {
-  const MAX = 40;
-  const ESPERA = 3000;
+  // polling adaptativo: rápido no começo (áudio curto fica pronto logo), depois espaça
+  const MAX = 50;
   for (let i = 0; i < MAX; i++) {
     const r = await fetch(`${AAI}/transcript/${id}`, { headers: { authorization: key } });
     const data = await r.json();
     if (data.status === "completed" || data.status === "error") return data;
-    await sleep(ESPERA);
+    await sleep(i < 6 ? 1200 : 2500);
   }
   return { status: "error", error: "tempo esgotado no polling" };
 }
