@@ -26,7 +26,9 @@ export async function onRequestPost(context) {
   const { request, env } = context;
 
   try {
-    if (!env.ASSEMBLYAI_API_KEY || !env.ANTHROPIC_API_KEY) {
+    const assemblyKey = readKey(env, "ASSEMBLYAI_API_KEY");
+    const anthropicKey = readKey(env, "ANTHROPIC_API_KEY");
+    if (!assemblyKey || !anthropicKey) {
       return json({ erro: "Chaves de API não configuradas no servidor." }, 500);
     }
 
@@ -37,7 +39,7 @@ export async function onRequestPost(context) {
 
     const upRes = await fetch(`${AAI}/upload`, {
       method: "POST",
-      headers: { authorization: env.ASSEMBLYAI_API_KEY },
+      headers: { authorization: assemblyKey },
       body: audioBytes,
     });
     if (!upRes.ok) return json({ erro: "Falha no upload do áudio (AssemblyAI)." }, 502);
@@ -45,7 +47,7 @@ export async function onRequestPost(context) {
 
     const trRes = await fetch(`${AAI}/transcript`, {
       method: "POST",
-      headers: { authorization: env.ASSEMBLYAI_API_KEY, "content-type": "application/json" },
+      headers: { authorization: assemblyKey, "content-type": "application/json" },
       body: JSON.stringify({
         audio_url: upload_url,
         speaker_labels: true,
@@ -57,7 +59,7 @@ export async function onRequestPost(context) {
     if (!trRes.ok) return json({ erro: "Falha ao criar transcrição (AssemblyAI)." }, 502);
     const criada = await trRes.json();
 
-    const transcript = await aguardarTranscricao(criada.id, env.ASSEMBLYAI_API_KEY);
+    const transcript = await aguardarTranscricao(criada.id, assemblyKey);
     if (transcript.status === "error") {
       return json({ erro: "Erro na transcrição: " + (transcript.error || "desconhecido") }, 502);
     }
@@ -68,7 +70,7 @@ export async function onRequestPost(context) {
     }
 
     const { falanteMarcelo, falaMarcelo, metricas } = analisarFalante(utterances);
-    const veredicto = await chamarJuiz(falaMarcelo, metricas, env.ANTHROPIC_API_KEY);
+    const veredicto = await chamarJuiz(falaMarcelo, metricas, anthropicKey);
 
     const itens = veredicto.itens || [];
     const acertos = itens.filter((i) => i.tipo === "acerto").length;
@@ -208,6 +210,15 @@ function extrairJSON(texto) {
     try { return JSON.parse(texto.slice(ini, fim + 1)); } catch (_) {}
   }
   return { resumo: "Não consegui interpretar o veredicto.", itens: [], reflexoes: [] };
+}
+
+// Lê uma env var tolerando espaços acidentais no nome (ex: "ANTHROPIC_API_KEY ").
+function readKey(env, name) {
+  if (env[name]) return env[name];
+  for (const k of Object.keys(env || {})) {
+    if (k.trim() === name) return env[k];
+  }
+  return undefined;
 }
 
 function sleep(ms) { return new Promise((res) => setTimeout(res, ms)); }
