@@ -285,6 +285,14 @@ body {
 .discreto-btn:active { background: var(--surface); }
 #blackout { position: fixed; inset: 0; z-index: 9999; background: #000; display: none; }
 #blackout.on { display: block; }
+.ctx-titulo { font-family: var(--font-display); font-size: 12pt; font-weight: 700; color: var(--text); text-align: center; }
+.ctx-sub { color: var(--text-soft); font-size: 8.5pt; text-align: center; margin: 6px 0 14px; }
+.ctx-text { width: 100%; min-height: 120px; resize: vertical; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: var(--r-md); color: var(--text); font-family: var(--font-body); font-size: 10pt; line-height: 1.5; padding: 12px 14px; outline: none; }
+.ctx-text:focus { border-color: var(--violet); }
+.ctx-acoes { display: flex; gap: 10px; margin-top: 14px; justify-content: center; }
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-soft); border-radius: var(--r-pill); padding: 11px 18px; font-family: var(--font-display); font-size: 9pt; font-weight: 600; cursor: pointer; }
+.btn-ghost.rec { color: var(--erro); border-color: var(--erro); }
+.ctx-status { text-align: center; color: var(--text-dim); font-size: 8pt; margin-top: 10px; min-height: 14px; }
 .hidden { display: none !important; }
 
 @media (min-width: 768px) {
@@ -335,11 +343,22 @@ body {
             <button data-r="rigido">Rígido</button>
           </div>
         </div>
-        <div class="hint" id="dicaVoz" style="margin-top:10px;">Comece dizendo <b>"ok"</b> pra eu reconhecer sua voz.</div>
+        <div class="hint" id="dicaVoz" style="margin-top:10px;">Ao parar, você explica o contexto da conversa.</div>
         <button id="btnDiscreto" class="discreto-btn">Tela preta (modo discreto)</button>
         <div class="aviso hidden" id="avisoMic">
           <b>Microfone bloqueado.</b> Libere o acesso ao microfone no navegador. A gravação só funciona no site publicado (HTTPS), não abrindo o arquivo direto.
         </div>
+      </div>
+
+      <div id="tela-contexto" class="hidden">
+        <div class="ctx-titulo">Contexto da conversa</div>
+        <p class="ctx-sub">Quem é você na conversa, com quem falou e a situação. Ajuda a IA a te achar e a julgar com nuance.</p>
+        <textarea id="ctxText" class="ctx-text" placeholder="Ex: Sou eu cobrando o prazo do fornecedor João. Foi uma conversa tensa, ele estava na defensiva."></textarea>
+        <div class="ctx-acoes">
+          <button id="btnDitar" class="btn-ghost"><span id="ditarLbl">🎤 Ditar</span></button>
+          <button id="btnAnalisar" class="btn-sec">Analisar</button>
+        </div>
+        <div class="ctx-status" id="ctxStatus"></div>
       </div>
 
       <div id="tela-processando" class="processando hidden">
@@ -372,7 +391,7 @@ body {
 
     </div>
   </div>
-  <div class="footer">FALA DIREITO! · FASE 1 · v0.17</div>
+  <div class="footer">FALA DIREITO! · FASE 1 · v0.18</div>
 </div>
 <div id="blackout"></div>
 
@@ -388,12 +407,14 @@ let gravando = false;
 let APP_PASS = localStorage.getItem("fd_pass") || "";
 let RIGOR = localStorage.getItem("fd_rigor") || "medio";
 let wakeLock = null;
+let mainBlob = null;
 
 const el = (id) => document.getElementById(id);
 
 function mostrarTela(nome) {
   el("tela-gravador").classList.toggle("hidden", nome !== "gravador");
   el("tela-processando").classList.toggle("hidden", nome !== "processando");
+  el("tela-contexto").classList.toggle("hidden", nome !== "contexto");
   el("tela-resultado").classList.toggle("hidden", nome !== "resultado");
 }
 
@@ -427,7 +448,7 @@ async function iniciarGravacao() {
   chunks = [];
   mediaRecorder = new MediaRecorder(stream);
   mediaRecorder.ondataavailable = (ev) => { if (ev.data.size > 0) chunks.push(ev.data); };
-  mediaRecorder.onstop = enviarAudio;
+  mediaRecorder.onstop = irParaContexto;
   mediaRecorder.start();
 
   gravando = true;
@@ -582,6 +603,82 @@ document.querySelectorAll("#rigor .seg button").forEach((b) => {
 });
 pintarRigor();
 
+// ---- contexto + análise ----
+function irParaContexto() {
+  soltarWakeLock();
+  mainBlob = new Blob(chunks, { type: "audio/webm" });
+  if (!mainBlob.size || mainBlob.size < 2000) {
+    mostrarTela("gravador");
+    el("avisoMic").classList.remove("hidden");
+    el("avisoMic").innerHTML = "<b>Gravação vazia.</b> O áudio não foi capturado — a tela travou ou o app foi pro fundo? Mantenha a tela ligada e grave de novo.";
+    return;
+  }
+  el("ctxStatus").textContent = "";
+  mostrarTela("contexto");
+}
+
+async function analisar() {
+  if (!mainBlob) return;
+  mostrarTela("processando");
+  el("procPasso").textContent = "Transcrevendo + julgando…";
+  const fd = new FormData();
+  fd.append("audio", mainBlob, "gravacao.webm");
+  fd.append("rigor", RIGOR);
+  fd.append("contexto", el("ctxText").value.trim());
+  try {
+    const resp = await fetch(ENDPOINT, { method: "POST", headers: { "x-app-pass": APP_PASS }, body: fd });
+    if (resp.status === 401) { sairAcesso("Senha incorreta. Entre de novo."); return; }
+    const dados = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error((dados && dados.erro) ? dados.erro : ("HTTP " + resp.status));
+    renderResultado(dados);
+    mostrarTela("resultado");
+  } catch (e) {
+    mostrarTela("contexto");
+    el("ctxStatus").textContent = "Erro: " + e.message;
+  }
+}
+
+let ctxRec = null, ctxChunks = [], ctxStream = null, ditando = false;
+async function ditarToggle() {
+  if (ditando) {
+    ditando = false;
+    el("btnDitar").classList.remove("rec");
+    el("ditarLbl").textContent = "🎤 Ditar";
+    if (ctxRec) ctxRec.stop();
+    if (ctxStream) ctxStream.getTracks().forEach((t) => t.stop());
+    return;
+  }
+  try { ctxStream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch (e) { el("ctxStatus").textContent = "Microfone bloqueado."; return; }
+  ctxChunks = [];
+  ctxRec = new MediaRecorder(ctxStream);
+  ctxRec.ondataavailable = (ev) => { if (ev.data.size > 0) ctxChunks.push(ev.data); };
+  ctxRec.onstop = transcreverContexto;
+  ctxRec.start();
+  ditando = true;
+  el("btnDitar").classList.add("rec");
+  el("ditarLbl").textContent = "⏹ Parar";
+  el("ctxStatus").textContent = "Gravando o contexto…";
+}
+async function transcreverContexto() {
+  el("ctxStatus").textContent = "Transcrevendo…";
+  const blob = new Blob(ctxChunks, { type: "audio/webm" });
+  if (!blob.size) { el("ctxStatus").textContent = ""; return; }
+  const fd = new FormData();
+  fd.append("audio", blob, "ctx.webm");
+  try {
+    const r = await fetch("/api/transcribe", { method: "POST", headers: { "x-app-pass": APP_PASS }, body: fd });
+    const d = await r.json().catch(() => ({}));
+    if (r.ok && d.text) {
+      const cur = el("ctxText").value.trim();
+      el("ctxText").value = (cur ? cur + " " : "") + d.text;
+      el("ctxStatus").textContent = "";
+    } else { el("ctxStatus").textContent = d.erro || "Não consegui transcrever."; }
+  } catch (e) { el("ctxStatus").textContent = "Erro ao transcrever."; }
+}
+el("btnDitar").addEventListener("click", ditarToggle);
+el("btnAnalisar").addEventListener("click", analisar);
+
 // ---- modo discreto: tela preta + 3 toques pra voltar ----
 let tapCount = 0, tapTimer = null;
 el("btnDiscreto").addEventListener("click", () => { el("blackout").classList.add("on"); });
@@ -597,6 +694,8 @@ el("btnNova").addEventListener("click", () => {
   mostrarTela("gravador");
   el("timer").textContent = "00:00";
   el("hint").textContent = "Toque para começar a gravar a reunião.";
+  el("ctxText").value = "";
+  mainBlob = null;
 });
 </script>
 </body>
