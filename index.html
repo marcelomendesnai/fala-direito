@@ -366,7 +366,7 @@ body {
 
     </div>
   </div>
-  <div class="footer">FALA DIREITO! · FASE 1 · v0.9</div>
+  <div class="footer">FALA DIREITO! · FASE 1 · v0.10</div>
 </div>
 
 <script>
@@ -380,6 +380,7 @@ let timerInt = null;
 let gravando = false;
 let APP_PASS = localStorage.getItem("fd_pass") || "";
 let RIGOR = localStorage.getItem("fd_rigor") || "medio";
+let wakeLock = null;
 
 const el = (id) => document.getElementById(id);
 
@@ -400,6 +401,13 @@ function tickTimer() {
   el("timer").textContent = fmt(segundos);
 }
 
+async function pedirWakeLock() {
+  try { if ("wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen"); } catch (e) {}
+}
+async function soltarWakeLock() {
+  try { if (wakeLock) { await wakeLock.release(); wakeLock = null; } } catch (e) {}
+}
+
 async function iniciarGravacao() {
   try {
     stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -408,6 +416,7 @@ async function iniciarGravacao() {
     return;
   }
   el("avisoMic").classList.add("hidden");
+  await pedirWakeLock();
   chunks = [];
   mediaRecorder = new MediaRecorder(stream);
   mediaRecorder.ondataavailable = (ev) => { if (ev.data.size > 0) chunks.push(ev.data); };
@@ -437,6 +446,7 @@ function pararGravacao() {
   el("recWrap").classList.remove("gravando");
   el("recIcon").textContent = "●";
   el("recLabel").textContent = "Gravar";
+  soltarWakeLock();
 }
 
 async function enviarAudio() {
@@ -444,6 +454,13 @@ async function enviarAudio() {
   el("procPasso").textContent = "Enviando áudio…";
 
   const blob = new Blob(chunks, { type: "audio/webm" });
+  if (!blob.size || blob.size < 2000) {
+    soltarWakeLock();
+    mostrarTela("gravador");
+    el("avisoMic").classList.remove("hidden");
+    el("avisoMic").innerHTML = "<b>Gravação vazia.</b> O áudio não foi capturado — provável que a tela travou ou o app foi pro fundo. Mantenha a tela ligada durante a gravação e tente de novo.";
+    return;
+  }
   const fd = new FormData();
   fd.append("audio", blob, "gravacao.webm");
   fd.append("rigor", RIGOR);

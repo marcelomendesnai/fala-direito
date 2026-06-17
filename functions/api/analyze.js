@@ -50,7 +50,7 @@ export async function onRequestPost(context) {
       headers: { authorization: assemblyKey },
       body: audioBytes,
     });
-    if (!upRes.ok) return json({ erro: "Falha no upload do áudio (AssemblyAI)." }, 502);
+    if (!upRes.ok) { const det = await upRes.text(); return json({ erro: "Falha no upload (AssemblyAI " + upRes.status + "): " + det.slice(0, 150) }, 502); }
     const { upload_url } = await upRes.json();
 
     const trRes = await fetch(`${AAI}/transcript`, {
