@@ -1,6 +1,6 @@
 // =============================================================================
 // /api/analyze — Cloudflare Pages Function (cofre/Worker)
-// ESCUTA: ElevenLabs Scribe v2 (transcrição + diarização). JUIZ: Anthropic Claude.
+// ESCUTA: ElevenLabs Scribe v2 (transcrição + diarização). MENTOR: Anthropic Claude.
 // NOVO: usa o CONTEXTO escrito pelo Marcelo p/ (1) identificar qual locutor é ele e
 //       (2) julgar com nuance. A própria IA escolhe o locutor; código calcula métricas.
 // Segredos: ELEVENLABS_API_KEY, ANTHROPIC_API_KEY, APP_PASSWORD.
@@ -10,7 +10,7 @@ import { MANUAL } from "./_manual.js";
 
 const STT_URL = "https://api.elevenlabs.io/v1/speech-to-text";
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
-const JUIZ_MODEL = "claude-sonnet-4-6";
+const MENTOR_MODEL = "claude-sonnet-4-6";
 const STT_MODEL = "scribe_v2";
 const MULETAS = ["né", "tipo", "então", "aí", "sabe", "entendeu", "cara"];
 
@@ -53,8 +53,8 @@ export async function onRequestPost(context) {
     // transcript em turnos (ordem temporal)
     const turnos = construirTurnos(words, (w) => label[sid(w)]);
 
-    // Juiz: identifica o Marcelo (via contexto) e julga
-    const veredicto = await chamarJuiz({ turnos, contexto, dominante, metricasPorLabel, rigor, key: anthropicKey });
+    // Mentor: identifica o Marcelo (via contexto) e julga
+    const veredicto = await chamarMentor({ turnos, contexto, dominante, metricasPorLabel, rigor, key: anthropicKey });
     let locutor = (veredicto.locutor || "").toUpperCase().replace(/[^A-Z]/g, "") || dominante;
     if (!porLabel[locutor]) locutor = dominante;
 
@@ -120,7 +120,7 @@ function calcMetricas(ws) {
   return { ritmo_ppm, pausas: pausasLongas ? `${pausasLongas} (maior ${maior.toFixed(1)}s)` : "nenhuma longa", hesitacao };
 }
 
-async function chamarJuiz({ turnos, contexto, dominante, metricasPorLabel, rigor, key }) {
+async function chamarMentor({ turnos, contexto, dominante, metricasPorLabel, rigor, key }) {
   const rigores = {
     brando: "MODO BRANDO: tom de mentor encorajador. Aponte só os 2-3 erros mais importantes, com leveza, e valorize os acertos. Evite excesso de críticas.",
     medio: "MODO MÉDIO: equilíbrio entre cobrança e encorajamento. Aponte os erros relevantes com objetividade.",
@@ -129,7 +129,7 @@ async function chamarJuiz({ turnos, contexto, dominante, metricasPorLabel, rigor
   const rigorTxt = rigores[rigor] || rigores.medio;
   const metricasTxt = Object.entries(metricasPorLabel).map(([L, m]) => `Locutor ${L}: ${m.ritmo_ppm} ppm, pausas longas ${m.pausas}, ${m.hesitacao} muletas`).join("\n");
 
-  const system = `Você é o JUIZ de comunicação do Marcelo. Avalie a fala dele de forma RÍGIDA e OBJETIVA, ancorado SOMENTE no manual abaixo. Não invente regras fora dele.
+  const system = `Você é o MENTOR de comunicação do Marcelo. Avalie a fala dele de forma RÍGIDA e OBJETIVA, ancorado SOMENTE no manual abaixo. Não invente regras fora dele.
 
 NÍVEL DE RIGOR DESTA ANÁLISE: ${rigorTxt}
 
@@ -162,13 +162,13 @@ Responda APENAS com JSON válido, sem markdown, neste formato exato:
 CONVERSA (separada por locutor):
 ${turnos}`;
 
-  const body = { model: JUIZ_MODEL, max_tokens: 2500, system, messages: [{ role: "user", content: user }] };
+  const body = { model: MENTOR_MODEL, max_tokens: 2500, system, messages: [{ role: "user", content: user }] };
   const r = await fetch(ANTHROPIC_URL, {
     method: "POST",
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!r.ok) { const det = await r.text(); throw new Error("Juiz (Claude) retornou " + r.status + ": " + det.slice(0, 200)); }
+  if (!r.ok) { const det = await r.text(); throw new Error("Mentor (Claude) retornou " + r.status + ": " + det.slice(0, 200)); }
   const data = await r.json();
   const texto = (data.content || []).map((c) => c.text || "").join("").trim();
   return extrairJSON(texto);

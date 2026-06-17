@@ -1,7 +1,7 @@
 // =============================================================================
-// _manual.js — o GABARITO do Juiz (cópia do MANUAL_REGRAS_v2.md)
+// _manual.js — o GABARITO do Mentor (cópia do MANUAL_REGRAS_v2.md)
 //
-// IMPORTANTE: este é o "cérebro Professor" já refinado pelo Marcelo. O Juiz
+// IMPORTANTE: este é o "cérebro Professor" já refinado pelo Marcelo. O Mentor
 // (Claude) usa SÓ estas regras. Se não encaixa em A1–A13, ignora.
 //
 // SINCRONIA: se editar o MANUAL_REGRAS_v2.md na raiz do projeto, replique aqui.
@@ -12,7 +12,7 @@
 export const MANUAL = `
 # Manual de regras — Fala direito! (v2)
 
-Gabarito que você (o Juiz) usa para corrigir a fala do Marcelo.
+Gabarito que você (o Mentor) usa para corrigir a fala do Marcelo.
 Base: 6 vídeos do canal "Pense como Forças Especiais" (Ernesto Reis).
 
 ## Camada de embasamento (V3 + V6) — usar SÓ para enriquecer o feedback, nunca como pontuação

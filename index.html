@@ -30,7 +30,7 @@
    ARQUITETURA (PRD jun/2026):
    - Frontend = Cloudflare Pages. Backend = Pages Function /api/analyze (cofre/Worker).
    - Fase 1: GRAVAR DENTRO DO APP (MediaRecorder) -> Function transcreve (AssemblyAI)
-     -> Juiz (Claude API) aplica MANUAL_REGRAS_v2.md -> feedback no CONTRATO abaixo.
+     -> Mentor (Claude API) aplica MANUAL_REGRAS_v2.md -> feedback no CONTRATO abaixo.
    - getUserMedia exige HTTPS: só funciona no domínio publicado, não em file://.
 
    CONTRATO DO FEEDBACK (o backend do Passo 3 devolve exatamente este JSON):
@@ -293,6 +293,15 @@ body {
 .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-soft); border-radius: var(--r-pill); padding: 11px 18px; font-family: var(--font-display); font-size: 9pt; font-weight: 600; cursor: pointer; }
 .btn-ghost.rec { color: var(--erro); border-color: var(--erro); }
 .ctx-status { text-align: center; color: var(--text-dim); font-size: 8pt; margin-top: 10px; min-height: 14px; }
+.hist-trend { display: flex; gap: 6px; align-items: flex-end; justify-content: center; height: 74px; margin-bottom: 16px; }
+.bar-col { display: flex; gap: 2px; align-items: flex-end; }
+.bar { width: 7px; border-radius: 3px 3px 0 0; }
+.bar.ok { background: var(--ok); }
+.bar.er { background: var(--erro); }
+.hist-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 10px 14px; margin-bottom: 8px; }
+.hist-top { display: flex; justify-content: space-between; align-items: center; }
+.hist-data { font-family: var(--font-display); font-size: 8pt; color: var(--text-soft); }
+.hist-meta { font-size: 8pt; color: var(--text-dim); margin-top: 4px; }
 .hidden { display: none !important; }
 
 @media (min-width: 768px) {
@@ -321,7 +330,7 @@ body {
     <div class="header">
       <span class="tag">Fase 1 · MVP</span>
       <h1>Fala direito<span class="bang">!</span></h1>
-      <p>Grave a conversa. O Juiz avalia sua fala contra suas próprias regras.</p>
+      <p>Grave a conversa. O Mentor avalia sua fala contra suas próprias regras.</p>
     </div>
 
     <div class="body">
@@ -345,6 +354,7 @@ body {
         </div>
         <div class="hint" id="dicaVoz" style="margin-top:10px;">Ao parar, você explica o contexto da conversa.</div>
         <button id="btnDiscreto" class="discreto-btn">Tela preta (modo discreto)</button>
+        <button id="btnHist" class="discreto-btn" style="margin-left:8px;">📈 Evolução</button>
         <div class="aviso hidden" id="avisoMic">
           <b>Microfone bloqueado.</b> Libere o acesso ao microfone no navegador. A gravação só funciona no site publicado (HTTPS), não abrindo o arquivo direto.
         </div>
@@ -364,7 +374,7 @@ body {
       <div id="tela-processando" class="processando hidden">
         <div class="spinner"></div>
         <div class="passo" id="procPasso">Enviando áudio…</div>
-        <div class="sub" id="procSub">Transcrição + Juiz. Pode levar alguns segundos.</div>
+        <div class="sub" id="procSub">Transcrição + Mentor. Pode levar alguns segundos.</div>
       </div>
 
       <div id="tela-resultado" class="hidden">
@@ -386,12 +396,24 @@ body {
 
         <div class="acoes">
           <button class="btn-sec" id="btnNova">Nova gravação</button>
+          <div style="margin-top:10px;"><button class="btn-ghost" id="btnHist2">📈 Ver evolução</button></div>
+        </div>
+      </div>
+
+      <div id="tela-historico" class="hidden">
+        <div class="ctx-titulo">Sua evolução</div>
+        <p class="ctx-sub">Verde = acertos, vermelho = erros, por sessão (mais recente à direita).</p>
+        <div class="hist-trend" id="histTrend"></div>
+        <div id="histLista"></div>
+        <div class="acoes">
+          <button class="btn-sec" id="btnHistVoltar">Voltar</button>
+          <div style="margin-top:10px;"><button class="btn-ghost" id="btnHistLimpar">Limpar histórico</button></div>
         </div>
       </div>
 
     </div>
   </div>
-  <div class="footer">FALA DIREITO! · FASE 1 · v0.18</div>
+  <div class="footer">FALA DIREITO! · FASE 1 · v0.19</div>
 </div>
 <div id="blackout"></div>
 
@@ -416,6 +438,7 @@ function mostrarTela(nome) {
   el("tela-processando").classList.toggle("hidden", nome !== "processando");
   el("tela-contexto").classList.toggle("hidden", nome !== "contexto");
   el("tela-resultado").classList.toggle("hidden", nome !== "resultado");
+  el("tela-historico").classList.toggle("hidden", nome !== "historico");
 }
 
 function fmt(s) {
@@ -561,6 +584,7 @@ function renderResultado(d) {
       refBloco.innerHTML += `<div class="reflexao"><div class="t">🪞 Auto-observação</div>${r}</div>`;
     });
   }
+  salvarHistorico(d);
 }
 
 // ---- trava de acesso por senha ----
@@ -678,6 +702,43 @@ async function transcreverContexto() {
 }
 el("btnDitar").addEventListener("click", ditarToggle);
 el("btnAnalisar").addEventListener("click", analisar);
+
+// ---- histórico de evolução (carcaça, salvo no aparelho via localStorage) ----
+function salvarHistorico(d) {
+  try {
+    const hist = JSON.parse(localStorage.getItem("fd_hist") || "[]");
+    hist.unshift({
+      data: new Date().toISOString(),
+      acertos: (d.placar && d.placar.acertos) || 0,
+      erros: (d.placar && d.placar.erros) || 0,
+      ritmo: (d.metricas && d.metricas.ritmo_ppm) || 0,
+      muletas: (d.metricas && d.metricas.hesitacao) || 0,
+      erros_regras: (d.itens || []).filter((i) => i.tipo === "erro").map((i) => i.regra),
+    });
+    localStorage.setItem("fd_hist", JSON.stringify(hist.slice(0, 100)));
+  } catch (e) {}
+}
+function renderHistorico() {
+  let hist = [];
+  try { hist = JSON.parse(localStorage.getItem("fd_hist") || "[]"); } catch (e) {}
+  const trend = el("histTrend"), lista = el("histLista");
+  if (!hist.length) { trend.innerHTML = ""; lista.innerHTML = '<p class="ctx-sub">Ainda sem análises salvas. Faça uma e ela aparece aqui.</p>'; return; }
+  const ult = hist.slice(0, 12).reverse();
+  const maxv = Math.max(1, ...ult.map((h) => Math.max(h.acertos, h.erros)));
+  trend.innerHTML = ult.map((h) => {
+    const ha = Math.round((h.acertos / maxv) * 60), he = Math.round((h.erros / maxv) * 60);
+    return `<div class="bar-col"><div class="bar ok" style="height:${ha}px"></div><div class="bar er" style="height:${he}px"></div></div>`;
+  }).join("");
+  lista.innerHTML = hist.map((h) => {
+    const dt = new Date(h.data).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+    const top = (h.erros_regras && h.erros_regras.length) ? h.erros_regras.slice(0, 3).join(", ") : "—";
+    return `<div class="hist-card"><div class="hist-top"><span class="hist-data">${dt}</span><span class="m">✅ ${h.acertos} · ⚠️ ${h.erros}</span></div><div class="hist-meta">🏃 ${h.ritmo} ppm · 🤐 ${h.muletas} muletas · erros: ${top}</div></div>`;
+  }).join("");
+}
+el("btnHist").addEventListener("click", () => { renderHistorico(); mostrarTela("historico"); });
+el("btnHist2").addEventListener("click", () => { renderHistorico(); mostrarTela("historico"); });
+el("btnHistVoltar").addEventListener("click", () => mostrarTela("gravador"));
+el("btnHistLimpar").addEventListener("click", () => { if (confirm("Apagar todo o histórico?")) { localStorage.removeItem("fd_hist"); renderHistorico(); } });
 
 // ---- modo discreto: tela preta + 3 toques pra voltar ----
 let tapCount = 0, tapTimer = null;
