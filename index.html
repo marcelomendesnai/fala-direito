@@ -265,6 +265,11 @@ body {
 
 .footer { font-family: var(--font-display); text-align: center; color: var(--text-dim); font-size: 7.5pt; padding: 18px 0 4px; letter-spacing: 1.5px; }
 
+.rigor { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 18px; }
+.rigor-lbl { font-family: var(--font-display); font-size: 7pt; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-dim); }
+.seg { display: inline-flex; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: var(--r-pill); padding: 3px; }
+.seg button { font-family: var(--font-display); font-size: 8pt; font-weight: 600; color: var(--text-soft); background: transparent; border: none; padding: 6px 14px; border-radius: var(--r-pill); cursor: pointer; transition: all .15s ease; }
+.seg button.on { color: #0a0e17; background: var(--grad); }
 .gate { position: fixed; inset: 0; z-index: 100; background: rgba(7,10,18,0.92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 20px; }
 .gate-card { width: 100%; max-width: 320px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xl); padding: 28px 22px; text-align: center; box-shadow: 0 24px 70px rgba(0,0,0,0.55); }
 .gate-title { font-family: var(--font-display); font-size: 15pt; font-weight: 700; background: var(--grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
@@ -314,6 +319,14 @@ body {
           </button>
         </div>
         <div class="hint" id="hint">Toque para começar a gravar a reunião.</div>
+        <div class="rigor" id="rigor">
+          <span class="rigor-lbl">Rigor</span>
+          <div class="seg">
+            <button data-r="brando">Brando</button>
+            <button data-r="medio">Médio</button>
+            <button data-r="rigido">Rígido</button>
+          </div>
+        </div>
         <div class="aviso hidden" id="avisoMic">
           <b>Microfone bloqueado.</b> Libere o acesso ao microfone no navegador. A gravação só funciona no site publicado (HTTPS), não abrindo o arquivo direto.
         </div>
@@ -349,7 +362,7 @@ body {
 
     </div>
   </div>
-  <div class="footer">FALA DIREITO! · FASE 1 · v0.3</div>
+  <div class="footer">FALA DIREITO! · FASE 1 · v0.4</div>
 </div>
 
 <script>
@@ -362,6 +375,7 @@ let segundos = 0;
 let timerInt = null;
 let gravando = false;
 let APP_PASS = localStorage.getItem("fd_pass") || "";
+let RIGOR = localStorage.getItem("fd_rigor") || "medio";
 
 const el = (id) => document.getElementById(id);
 
@@ -428,6 +442,7 @@ async function enviarAudio() {
   const blob = new Blob(chunks, { type: "audio/webm" });
   const fd = new FormData();
   fd.append("audio", blob, "gravacao.webm");
+  fd.append("rigor", RIGOR);
 
   try {
     el("procPasso").textContent = "Transcrevendo + julgando…";
@@ -520,6 +535,19 @@ async function tentarEntrar() {
 el("gateBtn").addEventListener("click", tentarEntrar);
 el("gatePass").addEventListener("keydown", (e) => { if (e.key === "Enter") tentarEntrar(); });
 if (!APP_PASS) showGate();
+
+// ---- seletor de rigor ----
+function pintarRigor() {
+  document.querySelectorAll("#rigor .seg button").forEach((b) => b.classList.toggle("on", b.dataset.r === RIGOR));
+}
+document.querySelectorAll("#rigor .seg button").forEach((b) => {
+  b.addEventListener("click", () => {
+    RIGOR = b.dataset.r;
+    try { localStorage.setItem("fd_rigor", RIGOR); } catch (e) {}
+    pintarRigor();
+  });
+});
+pintarRigor();
 
 el("btnRec").addEventListener("click", () => { gravando ? pararGravacao() : iniciarGravacao(); });
 el("btnNova").addEventListener("click", () => {

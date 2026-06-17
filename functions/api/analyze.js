@@ -41,6 +41,7 @@ export async function onRequestPost(context) {
 
     const form = await request.formData();
     const file = form.get("audio");
+    const rigor = (form.get("rigor") || "medio").toString();
     if (!file) return json({ erro: "Nenhum áudio recebido." }, 400);
     const audioBytes = await file.arrayBuffer();
 
@@ -77,7 +78,7 @@ export async function onRequestPost(context) {
     }
 
     const { falanteMarcelo, falaMarcelo, metricas } = analisarFalante(utterances);
-    const veredicto = await chamarJuiz(falaMarcelo, metricas, anthropicKey);
+    const veredicto = await chamarJuiz(falaMarcelo, metricas, anthropicKey, rigor);
 
     const itens = veredicto.itens || [];
     const acertos = itens.filter((i) => i.tipo === "acerto").length;
@@ -158,8 +159,16 @@ function contarFalantes(utterances) {
   return new Set(utterances.map((u) => u.speaker)).size;
 }
 
-async function chamarJuiz(falaMarcelo, metricas, key) {
+async function chamarJuiz(falaMarcelo, metricas, key, rigor) {
+  const rigores = {
+    brando: "MODO BRANDO: tom de mentor encorajador. Aponte só os 2-3 erros mais importantes, com leveza, e valorize os acertos. Evite excesso de críticas.",
+    medio: "MODO MÉDIO: equilíbrio entre cobrança e encorajamento. Aponte os erros relevantes com objetividade.",
+    rigido: "MODO RÍGIDO: implacável. Não deixe passar nenhuma violação, por menor que seja. Cobre padrão de excelência, seja direto e severo (sem ofender), focando no crescimento.",
+  };
+  const rigorTxt = rigores[rigor] || rigores.medio;
   const system = `Você é o JUIZ de comunicação do Marcelo. Avalie a fala dele de forma RÍGIDA e OBJETIVA, ancorado SOMENTE no manual abaixo. Não invente regras fora dele.
+
+NÍVEL DE RIGOR DESTA ANÁLISE: ${rigorTxt}
 
 ${MANUAL}
 
