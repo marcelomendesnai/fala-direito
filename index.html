@@ -281,6 +281,10 @@ body {
 .gate-input { width: 100%; padding: 12px 14px; border-radius: var(--r-md); border: 1px solid var(--border); background: rgba(0,0,0,0.3); color: var(--text); font-family: var(--font-body); font-size: 11pt; margin-bottom: 12px; outline: none; }
 .gate-input:focus { border-color: var(--violet); }
 .gate-err { color: var(--erro); font-size: 8pt; margin-top: 10px; }
+.discreto-btn { margin-top: 14px; background: transparent; border: 1px solid var(--border); color: var(--text-dim); border-radius: var(--r-pill); padding: 8px 18px; font-size: 8pt; font-family: var(--font-display); letter-spacing: .5px; cursor: pointer; }
+.discreto-btn:active { background: var(--surface); }
+#blackout { position: fixed; inset: 0; z-index: 9999; background: #000; display: none; }
+#blackout.on { display: block; }
 .hidden { display: none !important; }
 
 @media (min-width: 768px) {
@@ -332,6 +336,7 @@ body {
           </div>
         </div>
         <div class="hint" id="dicaVoz" style="margin-top:10px;">Comece dizendo <b>"ok"</b> pra eu reconhecer sua voz.</div>
+        <button id="btnDiscreto" class="discreto-btn">Tela preta (modo discreto)</button>
         <div class="aviso hidden" id="avisoMic">
           <b>Microfone bloqueado.</b> Libere o acesso ao microfone no navegador. A gravação só funciona no site publicado (HTTPS), não abrindo o arquivo direto.
         </div>
@@ -367,8 +372,9 @@ body {
 
     </div>
   </div>
-  <div class="footer">FALA DIREITO! · FASE 1 · v0.16</div>
+  <div class="footer">FALA DIREITO! · FASE 1 · v0.17</div>
 </div>
+<div id="blackout"></div>
 
 <script>
 const ENDPOINT = "/api/analyze";
@@ -575,6 +581,16 @@ document.querySelectorAll("#rigor .seg button").forEach((b) => {
   });
 });
 pintarRigor();
+
+// ---- modo discreto: tela preta + 3 toques pra voltar ----
+let tapCount = 0, tapTimer = null;
+el("btnDiscreto").addEventListener("click", () => { el("blackout").classList.add("on"); });
+el("blackout").addEventListener("click", () => {
+  tapCount++;
+  clearTimeout(tapTimer);
+  tapTimer = setTimeout(() => { tapCount = 0; }, 700);
+  if (tapCount >= 3) { tapCount = 0; clearTimeout(tapTimer); el("blackout").classList.remove("on"); }
+});
 
 el("btnRec").addEventListener("click", () => { gravando ? pararGravacao() : iniciarGravacao(); });
 el("btnNova").addEventListener("click", () => {
