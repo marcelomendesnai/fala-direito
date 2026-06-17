@@ -18,6 +18,7 @@ Base: 6 vídeos do canal "Pense como Forças Especiais" (Ernesto Reis).
 ## Camada de embasamento (V3 + V6) — usar SÓ para enriquecer o feedback, nunca como pontuação
 - V3 (eliminar 10 coisas): vício em aprovação, autossabotagem, perfeccionismo, medo de falhar, controle excessivo. Raízes psicológicas por trás dos erros de fala.
 - V6 (método militar do tempo): clareza de missão, foco em uma prioridade, falar/agir com intenção. Reforça o valor de comunicação enxuta e direta.
+- Silêncio & pausa (vídeos "7 benefícios do silêncio" + "pausa emocional"): silêncio e pausas curtas são poder — dão tempo de absorção, passam controle, evitam arrependimento e fazem o outro revelar informação sob a tensão do silêncio. Reforça A6 e o valor de pausas estratégicas. CAVEAT: silêncio em excesso, ou diante de superiores, pode soar como desinteresse/insegurança — nunca elogie pausa cegamente; avalie se foi estratégica ou travamento.
 - Uso: cite isso no MÁXIMO em uma frase de contexto. Não vira acerto nem erro.
 
 ## PARTE A — Regras checáveis só pela fala (núcleo). A IA aponta acerto/erro objetivamente.
