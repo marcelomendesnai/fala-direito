@@ -415,8 +415,8 @@ async function enviarAudio() {
   try {
     el("procPasso").textContent = "Transcrevendo + julgando…";
     const resp = await fetch(ENDPOINT, { method: "POST", body: fd });
-    if (!resp.ok) throw new Error("HTTP " + resp.status);
-    const dados = await resp.json();
+    const dados = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error((dados && dados.erro) ? dados.erro : ("HTTP " + resp.status));
     renderResultado(dados);
     mostrarTela("resultado");
   } catch (e) {
