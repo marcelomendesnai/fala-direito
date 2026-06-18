@@ -431,7 +431,7 @@ body {
 
     </div>
   </div>
-  <div class="footer">FALA DIREITO! · FASE 1 · v0.27</div>
+  <div class="footer">FALA DIREITO! · FASE 1 · v0.28</div>
 </div>
 <div id="blackout"></div>
 
@@ -498,7 +498,7 @@ async function iniciarGravacao() {
   mediaRecorder = new MediaRecorder(stream);
   mediaRecorder.ondataavailable = (ev) => { if (ev.data.size > 0) chunks.push(ev.data); };
   mediaRecorder.onstop = irParaContexto;
-  mediaRecorder.start();
+  mediaRecorder.start(1000);
 
   gravando = true;
   segundos = 0;
@@ -958,6 +958,9 @@ el("blackout").addEventListener("click", () => {
   if (tapCount >= 3) { tapCount = 0; clearTimeout(tapTimer); el("blackout").classList.remove("on"); }
 });
 
+document.addEventListener("visibilitychange", () => {
+  if (gravando && document.visibilityState === "visible") pedirWakeLock();
+});
 el("btnRec").addEventListener("click", () => { gravando ? pararGravacao() : iniciarGravacao(); });
 el("btnNova").addEventListener("click", () => {
   mostrarTela("gravador");
