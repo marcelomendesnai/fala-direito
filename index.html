@@ -431,7 +431,7 @@ body {
 
     </div>
   </div>
-  <div class="footer">FALA DIREITO! · FASE 1 · v0.28</div>
+  <div class="footer">FALA DIREITO! · FASE 1 · v0.29</div>
 </div>
 <div id="blackout"></div>
 
@@ -478,8 +478,15 @@ function tickTimer() {
   el("timer").textContent = fmt(segundos);
 }
 
+let wakeLockOK = false;
 async function pedirWakeLock() {
-  try { if ("wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen"); } catch (e) {}
+  try {
+    if ("wakeLock" in navigator) {
+      wakeLock = await navigator.wakeLock.request("screen");
+      wakeLockOK = true;
+      wakeLock.addEventListener("release", () => { wakeLockOK = false; });
+    } else { wakeLockOK = false; }
+  } catch (e) { wakeLockOK = false; }
 }
 async function soltarWakeLock() {
   try { if (wakeLock) { await wakeLock.release(); wakeLock = null; } } catch (e) {}
@@ -509,8 +516,13 @@ async function iniciarGravacao() {
   el("recWrap").classList.add("gravando");
   el("recIcon").textContent = "◎";
   el("recLabel").textContent = "Parar";
-  el("hint").textContent = "Gravando… toque para parar e analisar.";
-  el("blackout").classList.add("on");   // modo discreto automático ao gravar (3 toques revelam)
+  el("hint").textContent = "Gravando…";
+  if (wakeLockOK) {
+    el("blackout").classList.add("on");   // modo discreto: tela preta, 3 toques revelam
+  } else {
+    el("avisoMic").classList.remove("hidden");
+    el("avisoMic").innerHTML = "<b>Atenção:</b> seu iPhone não deixou eu impedir o bloqueio automático. Pra gravar com a tela preta sem parar, ative <b>Ajustes → Tela e Brilho → Bloqueio Automático → Nunca</b>. (Sem isso, se a tela apagar, a gravação para.)";
+  }
 }
 
 function pararGravacao() {
