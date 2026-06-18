@@ -32,7 +32,7 @@ export async function onRequestPost(context) {
 
     const itens = veredicto.itens || [];
     return json({
-      placar: { acertos: itens.filter((i) => i.tipo === "acerto").length, erros: itens.filter((i) => i.tipo === "erro").length, regras_avaliadas: 13 },
+      placar: { acertos: itens.filter((i) => i.tipo === "acerto").length, erros: itens.filter((i) => i.tipo === "erro").length, regras_avaliadas: 14 },
       resumo: veredicto.resumo || "—",
       metricas: metricasPorLabel[locutor] || { ritmo_ppm: 0, pausas: "—", hesitacao: 0 },
       itens,

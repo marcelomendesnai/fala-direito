@@ -2,7 +2,7 @@
 // _manual.js — o GABARITO do Mentor (cópia do MANUAL_REGRAS_v2.md)
 //
 // IMPORTANTE: este é o "cérebro Professor" já refinado pelo Marcelo. O Mentor
-// (Claude) usa SÓ estas regras. Se não encaixa em A1–A13, ignora.
+// (Claude) usa SÓ estas regras. Se não encaixa em A1–A14, ignora.
 //
 // SINCRONIA: se editar o MANUAL_REGRAS_v2.md na raiz do projeto, replique aqui.
 // (Pages Functions não lê arquivo do disco em runtime, por isso o manual fica
@@ -19,6 +19,8 @@ Base: 6 vídeos do canal "Pense como Forças Especiais" (Ernesto Reis).
 - V3 (eliminar 10 coisas): vício em aprovação, autossabotagem, perfeccionismo, medo de falhar, controle excessivo. Raízes psicológicas por trás dos erros de fala.
 - V6 (método militar do tempo): clareza de missão, foco em uma prioridade, falar/agir com intenção. Reforça o valor de comunicação enxuta e direta.
 - Silêncio & pausa (vídeos "7 benefícios do silêncio" + "pausa emocional"): silêncio e pausas curtas são poder — dão tempo de absorção, passam controle, evitam arrependimento e fazem o outro revelar informação sob a tensão do silêncio. Reforça A6 e o valor de pausas estratégicas. CAVEAT: silêncio em excesso, ou diante de superiores, pode soar como desinteresse/insegurança — nunca elogie pausa cegamente; avalie se foi estratégica ou travamento.
+- Respeito por limites (vídeo "hábitos que destroem o respeito"): justificar-se demais, pedir desculpa à toa, buscar validação e virar "terapeuta/lixeira emocional" corroem respeito — cada explicação vira uma brecha. Reforça A1, A3, A4, A2.
+- Não-reatividade (vídeo "como impor respeito", Tommy Shelby): manter a calma e NÃO reagir no impulso à provocação projeta mais confiança que revidar. Reforça A3 e A10.
 - Uso: cite isso no MÁXIMO em uma frase de contexto. Não vira acerto nem erro.
 
 ## PARTE A — Regras checáveis só pela fala (núcleo). A IA aponta acerto/erro objetivamente.
@@ -38,8 +40,9 @@ Base: 6 vídeos do canal "Pense como Forças Especiais" (Ernesto Reis).
 | A11 | Dizer não sem discurso | Recusa longa, cheia de justificativa e desculpa | 3 frases secas: "Não consigo assumir isso agora" | Recusa com 5 linhas de explicação culpada |
 | A12 | Muletas de linguagem | Conta: "né", "tipo", "então", "aí", "sabe?", "entendeu?", "cara" | Fala limpa, sem repetição de muleta | "Tipo, né, então, sabe, aí eu fui" |
 | A13 | Interromper vs interjetar | Sobreposição de fala; cortar antes do outro terminar (precisa de 2 vozes) | Deixa terminar; "quando você disse X, o que quis dizer?" | Corta achando que já sabe o que vem |
+| A14 | Linguagem de convicção | Verbos hesitantes: "eu acho", "eu espero", "eu queria", "talvez", "se possível", "meio que"; condicional fraco | Verbos firmes: "eu vou", "eu decidi", afirmação direta | "Eu acho que talvez desse pra gente tentar ver isso" |
 
-Regra de ouro: NÃO invente regra fora deste manual. Se não encaixa em A1–A13, ignora.
+Regra de ouro: NÃO invente regra fora deste manual. Se não encaixa em A1–A14, ignora.
 
 ## PARTE B — Reflexão guiada por gatilho verbal (NÃO afirma o corpo, PERGUNTA)
 

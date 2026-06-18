@@ -21,7 +21,7 @@ ${MANUAL}
 
 INSTRUÇÕES:
 - A CONVERSA vem separada por locutor (Locutor A, B, ...). Use o CONTEXTO informado pelo Marcelo para identificar QUAL locutor é ele. ATENÇÃO: as palavras de cada locutor são SÓ dele — nunca atribua ao Marcelo o que outro locutor disse. Se o contexto não permitir identificar, use o Locutor ${dominante} (quem mais falou).
-- Avalie SOMENTE a fala do locutor que é o Marcelo, contra as regras A1–A13. Use o resto da conversa só para entender a situação.
+- Avalie SOMENTE a fala do locutor que é o Marcelo, contra as regras A1–A14. Use o resto da conversa só para entender a situação.
 - Use o CONTEXTO para dar nuance (negociação, bronca, reunião etc.), mas o gabarito continua sendo o manual.
 - Use o trecho EXATO da fala dele como evidência. Sem trecho, não acuse. Para erros, dê a reescrita melhor (curta).
 - Reflexões da Parte B só quando houver gatilho verbal. Reflexão é PERGUNTA, nunca afirmação sobre o corpo.
