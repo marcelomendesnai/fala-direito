@@ -399,6 +399,7 @@ body {
 
         <div class="acoes">
           <button class="btn-sec" id="btnNova">Nova gravação</button>
+          <div style="margin-top:10px;"><button class="btn-ghost" id="btnCorrigir">✏️ Corrigir contexto e reanalisar</button></div>
           <div style="margin-top:10px;"><button class="btn-ghost" id="btnHist2">📈 Ver evolução</button></div>
         </div>
       </div>
@@ -416,7 +417,7 @@ body {
 
     </div>
   </div>
-  <div class="footer">FALA DIREITO! · FASE 1 · v0.21</div>
+  <div class="footer">FALA DIREITO! · FASE 1 · v0.22</div>
 </div>
 <div id="blackout"></div>
 
@@ -433,6 +434,10 @@ let APP_PASS = localStorage.getItem("fd_pass") || "";
 let RIGOR = localStorage.getItem("fd_rigor") || "medio";
 let wakeLock = null;
 let mainBlob = null;
+let ultimaSessao = null;
+let ultimoContexto = "";
+let modoRejulgar = false;
+let idxAtual = 0;
 
 const el = (id) => document.getElementById(id);
 
@@ -648,6 +653,8 @@ function irParaContexto() {
     return;
   }
   el("ctxStatus").textContent = "";
+  modoRejulgar = false;
+  el("btnAnalisar").textContent = "Analisar";
   mostrarTela("contexto");
 }
 
@@ -666,6 +673,9 @@ async function analisar() {
     if (!resp.ok) throw new Error((dados && dados.erro) ? dados.erro : ("HTTP " + resp.status));
     renderResultado(dados);
     mostrarTela("resultado");
+    ultimaSessao = dados._sessao || null;
+    ultimoContexto = el("ctxText").value.trim();
+    idxAtual = 0;
     salvarHistorico(dados);
   } catch (e) {
     mostrarTela("contexto");
@@ -712,7 +722,46 @@ async function transcreverContexto() {
   } catch (e) { el("ctxStatus").textContent = "Erro ao transcrever."; }
 }
 el("btnDitar").addEventListener("click", ditarToggle);
-el("btnAnalisar").addEventListener("click", analisar);
+el("btnAnalisar").addEventListener("click", () => (modoRejulgar ? reanalisar() : analisar()));
+el("btnCorrigir").addEventListener("click", () => {
+  if (!ultimaSessao) { el("ctxStatus").textContent = ""; return; }
+  modoRejulgar = true;
+  el("ctxText").value = ultimoContexto || "";
+  el("ctxStatus").textContent = 'Corrija quem é você e a situação (ex: "as falas sobre mudar o processo são do Locutor B; eu sou quem cobra o prazo"). Depois toque Reanalisar.';
+  el("btnAnalisar").textContent = "Reanalisar";
+  mostrarTela("contexto");
+});
+async function reanalisar() {
+  if (!ultimaSessao) { analisar(); return; }
+  mostrarTela("processando");
+  el("procPasso").textContent = "Reanalisando…";
+  try {
+    const resp = await fetch("/api/rejudge", {
+      method: "POST",
+      headers: { "x-app-pass": APP_PASS, "content-type": "application/json" },
+      body: JSON.stringify({ turnos: ultimaSessao.turnos, metricas: ultimaSessao.metricasPorLabel, dominante: ultimaSessao.dominante, contexto: el("ctxText").value.trim(), rigor: RIGOR }),
+    });
+    if (resp.status === 401) { sairAcesso("Senha incorreta. Entre de novo."); return; }
+    const dados = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error((dados && dados.erro) ? dados.erro : ("HTTP " + resp.status));
+    renderResultado(dados);
+    mostrarTela("resultado");
+    ultimaSessao = dados._sessao || ultimaSessao;
+    ultimoContexto = el("ctxText").value.trim();
+    substituirHistorico(idxAtual, dados);
+    modoRejulgar = false;
+    el("btnAnalisar").textContent = "Analisar";
+  } catch (e) {
+    mostrarTela("contexto");
+    el("ctxStatus").textContent = "Erro: " + e.message;
+  }
+}
+function substituirHistorico(idx, d) {
+  try {
+    const hist = JSON.parse(localStorage.getItem("fd_hist") || "[]");
+    if (hist[idx]) { hist[idx] = Object.assign({ data: hist[idx].data || new Date().toISOString() }, d); localStorage.setItem("fd_hist", JSON.stringify(hist)); }
+  } catch (e) {}
+}
 
 // ---- histórico de evolução (carcaça, salvo no aparelho via localStorage) ----
 function salvarHistorico(d) {
@@ -745,7 +794,13 @@ function renderHistorico() {
 function verLaudo(i) {
   let hist = [];
   try { hist = JSON.parse(localStorage.getItem("fd_hist") || "[]"); } catch (e) {}
-  if (hist[i]) { renderResultado(hist[i]); mostrarTela("resultado"); }
+  if (hist[i]) {
+    renderResultado(hist[i]);
+    ultimaSessao = hist[i]._sessao || null;
+    ultimoContexto = "";
+    idxAtual = i;
+    mostrarTela("resultado");
+  }
 }
 el("btnHist").addEventListener("click", () => { renderHistorico(); mostrarTela("historico"); });
 el("btnHist2").addEventListener("click", () => { renderHistorico(); mostrarTela("historico"); });
