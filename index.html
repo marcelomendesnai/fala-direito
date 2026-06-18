@@ -318,6 +318,11 @@ body {
 .m2-2 { color: #cfa274; }
 .m2-sign { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 8pt; color: var(--text-soft); margin-top: 3px; text-transform: none; letter-spacing: 0; }
 .m2-ver { font-size: 7.5pt; color: var(--text-dim); }
+#splash { position: fixed; inset: 0; z-index: 200; background: #FAF6EF; display: flex; flex-direction: column; align-items: center; justify-content: center; animation: splashOut .6s ease 2.6s forwards; }
+#splash .sp-word { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 30pt; color: #2D2A26; letter-spacing: .5px; margin-top: 16px; }
+#splash .sp-2 { color: #A0673C; }
+#splash .sp-sign { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 12pt; color: #7E5230; margin-top: 8px; }
+@keyframes splashOut { to { opacity: 0; visibility: hidden; } }
 .hidden { display: none !important; }
 
 @media (min-width: 768px) {
@@ -331,6 +336,11 @@ body {
 </style>
 </head>
 <body>
+<div id="splash">
+  <svg width="96" height="96" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="M2Labs"><circle cx="100" cy="100" r="92" fill="#F1E5D2" stroke="#E1CFB2" stroke-width="3"/><circle cx="71" cy="60" r="20" fill="#7E5230"/><circle cx="129" cy="60" r="20" fill="#7E5230"/><circle cx="71" cy="63" r="9" fill="#BC8E60"/><circle cx="129" cy="63" r="9" fill="#BC8E60"/><ellipse cx="100" cy="98" rx="64" ry="58" fill="#9A6638"/><path d="M47 70 Q100 35 153 70" fill="none" stroke="#85562D" stroke-width="4" stroke-linecap="round" opacity="0.5"/><ellipse cx="100" cy="128" rx="44" ry="33" fill="#CFA274"/><circle cx="76" cy="82" r="9" fill="#2B1C10"/><circle cx="124" cy="82" r="9" fill="#2B1C10"/><circle cx="79" cy="79" r="2.6" fill="#FFFFFF"/><circle cx="127" cy="79" r="2.6" fill="#FFFFFF"/><ellipse cx="100" cy="110" rx="13" ry="9" fill="#3A2415"/><rect x="91" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><rect x="101" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><line x1="64" y1="124" x2="32" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="64" y1="132" x2="33" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="124" x2="168" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="132" x2="167" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/></svg>
+  <div class="sp-word">M<span class="sp-2">2</span>Labs</div>
+  <div class="sp-sign">por Marcelo Mendes</div>
+</div>
 <div class="wrap">
   <div id="gate" class="gate hidden">
     <div class="gate-card">
@@ -447,7 +457,7 @@ body {
     </div>
   </div>
   <div class="footer">
-    <div class="m2-ver">FALA DIREITO! · FASE 1 · v0.33</div>
+    <div class="m2-ver">FALA DIREITO! · FASE 1 · v0.34</div>
     <div class="m2-assinatura">
     <div class="m2-sig">
       <svg width="26" height="26" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="M2Labs"><circle cx="100" cy="100" r="92" fill="#F1E5D2" stroke="#E1CFB2" stroke-width="3"/><circle cx="71" cy="60" r="20" fill="#7E5230"/><circle cx="129" cy="60" r="20" fill="#7E5230"/><circle cx="71" cy="63" r="9" fill="#BC8E60"/><circle cx="129" cy="63" r="9" fill="#BC8E60"/><ellipse cx="100" cy="98" rx="64" ry="58" fill="#9A6638"/><path d="M47 70 Q100 35 153 70" fill="none" stroke="#85562D" stroke-width="4" stroke-linecap="round" opacity="0.5"/><ellipse cx="100" cy="128" rx="44" ry="33" fill="#CFA274"/><circle cx="76" cy="82" r="9" fill="#2B1C10"/><circle cx="124" cy="82" r="9" fill="#2B1C10"/><circle cx="79" cy="79" r="2.6" fill="#FFFFFF"/><circle cx="127" cy="79" r="2.6" fill="#FFFFFF"/><ellipse cx="100" cy="110" rx="13" ry="9" fill="#3A2415"/><rect x="91" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><rect x="101" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><line x1="64" y1="124" x2="32" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="64" y1="132" x2="33" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="124" x2="168" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="132" x2="167" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/></svg>
@@ -482,6 +492,7 @@ let identidades = [];
 let numPessoas = 2;
 
 const el = (id) => document.getElementById(id);
+setTimeout(() => { const sp = document.getElementById("splash"); if (sp) sp.remove(); }, 3300);
 
 function mostrarTela(nome) {
   el("tela-gravador").classList.toggle("hidden", nome !== "gravador");
