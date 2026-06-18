@@ -362,13 +362,7 @@ body {
             <button data-r="rigido">Rígido</button>
           </div>
         </div>
-        <div class="pessoas">
-          <span class="rigor-lbl">Pessoas</span>
-          <button class="step-btn" id="pMenos">−</button>
-          <span class="step-num" id="pNum">2</span>
-          <button class="step-btn" id="pMais">+</button>
-        </div>
-        <div class="hint" id="dicaVoz" style="margin-top:10px;">Ao parar, você explica o contexto da conversa.</div>
+        <div class="hint" id="dicaVoz" style="margin-top:10px;">Ao parar, você informa as pessoas e o contexto.</div>
         <button id="btnDiscreto" class="discreto-btn">Tela preta (modo discreto)</button>
         <button id="btnHist" class="discreto-btn" style="margin-left:8px;">📈 Evolução</button>
         <div class="aviso hidden" id="avisoMic">
@@ -380,11 +374,10 @@ body {
         <div class="ctx-titulo">Contexto da conversa</div>
         <p class="ctx-sub">Quem é você na conversa, com quem falou e a situação. Ajuda a IA a te achar e a julgar com nuance.</p>
         <div class="pessoas" style="margin-bottom:14px;">
-          <span class="rigor-lbl" id="detLoc">2 locutores</span>
-          <button class="step-btn" id="pMenos2">−</button>
-          <span class="step-num" id="pNum2">2</span>
-          <button class="step-btn" id="pMais2">+</button>
-          <button class="btn-ghost" id="btnRetranscrever">Re-transcrever</button>
+          <span class="rigor-lbl">Quantas pessoas falaram?</span>
+          <button class="step-btn" id="pMenos">−</button>
+          <span class="step-num" id="pNum">2</span>
+          <button class="step-btn" id="pMais">+</button>
         </div>
         <textarea id="ctxText" class="ctx-text" placeholder="Ex: Sou eu cobrando o prazo do fornecedor João. Foi uma conversa tensa, ele estava na defensiva."></textarea>
         <div class="ctx-acoes">
@@ -447,7 +440,7 @@ body {
 
     </div>
   </div>
-  <div class="footer">FALA DIREITO! · FASE 1 · v0.30</div>
+  <div class="footer">FALA DIREITO! · FASE 1 · v0.31</div>
 </div>
 <div id="blackout"></div>
 
@@ -721,7 +714,8 @@ function irParaContexto() {
   el("ctxStatus").textContent = "";
   modoRejulgar = false;
   el("btnAnalisar").textContent = "Rodar análise";
-  transcreveConversa();
+  convoWords = [];
+  mostrarTela("contexto");
 }
 
 async function analisar() {
@@ -830,7 +824,7 @@ function substituirHistorico(idx, d) {
 }
 
 // ---- transcrever a conversa, revisar locutores e rodar a análise ----
-async function transcreveConversa() {
+async function transcreveConversa(cb) {
   if (!mainBlob) return;
   mostrarTela("processando");
   el("procPasso").textContent = "Transcrevendo…";
@@ -845,15 +839,13 @@ async function transcreveConversa() {
     convoWords = d.words || [];
     if (!convoWords.length) throw new Error("Não consegui transcrever (áudio curto/sem voz?).");
     mapearIdentidades();
-    el("detLoc").textContent = identidades.length + (identidades.length === 1 ? " locutor" : " locutores");
-    el("ctxStatus").textContent = "";
-    mostrarTela("contexto");
+    if (cb) cb(); else mostrarTela("contexto");
   } catch (e) {
-    mostrarTela("gravador");
-    el("avisoMic").classList.remove("hidden");
-    el("avisoMic").innerHTML = "<b>Erro na transcrição.</b> " + e.message;
+    mostrarTela("contexto");
+    el("ctxStatus").textContent = "Erro na transcrição: " + e.message;
   }
 }
+function garantirTranscricao(cb) { if (convoWords.length) cb(); else transcreveConversa(cb); }
 
 function construirTurnosStr(words) {
   const t = []; let cur = null;
@@ -908,7 +900,8 @@ function ciclarLocutor(i) {
   for (let k = t.ini; k <= t.fim; k++) convoWords[k].spk = prox;
   renderRevisao();
 }
-async function rodarAnalise() {
+function rodarAnalise() { garantirTranscricao(rodarAnaliseReal); }
+async function rodarAnaliseReal() {
   if (!convoWords.length) return;
   mostrarTela("processando");
   el("procPasso").textContent = "Analisando…";
@@ -932,14 +925,11 @@ async function rodarAnalise() {
     el("ctxStatus").textContent = "Erro: " + e.message;
   }
 }
-el("btnRevisar").addEventListener("click", () => { construirTurnsArr(); renderRevisao(); mostrarTela("revisao"); });
+el("btnRevisar").addEventListener("click", () => garantirTranscricao(() => { construirTurnsArr(); renderRevisao(); mostrarTela("revisao"); }));
 el("btnRevOk").addEventListener("click", () => mostrarTela("contexto"));
-function setPessoas(n) { numPessoas = Math.max(1, Math.min(8, n)); el("pNum").textContent = numPessoas; el("pNum2").textContent = numPessoas; }
+function setPessoas(n) { numPessoas = Math.max(1, Math.min(8, n)); el("pNum").textContent = numPessoas; convoWords = []; }
 el("pMenos").addEventListener("click", () => setPessoas(numPessoas - 1));
 el("pMais").addEventListener("click", () => setPessoas(numPessoas + 1));
-el("pMenos2").addEventListener("click", () => setPessoas(numPessoas - 1));
-el("pMais2").addEventListener("click", () => setPessoas(numPessoas + 1));
-el("btnRetranscrever").addEventListener("click", transcreveConversa);
 
 // ---- histórico de evolução (carcaça, salvo no aparelho via localStorage) ----
 function salvarHistorico(d) {
