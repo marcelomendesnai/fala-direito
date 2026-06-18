@@ -346,11 +346,11 @@ body {
         <div class="timer" id="timer">00:00</div>
         <div class="rec-wrap" id="recWrap">
           <button class="rec-btn" id="btnRec">
-            <span class="icon" id="recIcon">●</span>
-            <span id="recLabel">Gravar</span>
+            <span class="icon" id="recIcon">◎</span>
+            <span id="recLabel">GPS ativo</span>
           </button>
         </div>
-        <div class="hint" id="hint">Toque para começar a gravar a reunião.</div>
+        <div class="hint" id="hint">Toque para ativar.</div>
         <div class="rigor" id="rigor">
           <span class="rigor-lbl">Rigor</span>
           <div class="seg">
@@ -431,7 +431,7 @@ body {
 
     </div>
   </div>
-  <div class="footer">FALA DIREITO! · FASE 1 · v0.25</div>
+  <div class="footer">FALA DIREITO! · FASE 1 · v0.26</div>
 </div>
 <div id="blackout"></div>
 
@@ -506,7 +506,7 @@ async function iniciarGravacao() {
 
   el("btnRec").classList.add("gravando");
   el("recWrap").classList.add("gravando");
-  el("recIcon").textContent = "■";
+  el("recIcon").textContent = "◎";
   el("recLabel").textContent = "Parar";
   el("hint").textContent = "Gravando… toque para parar e analisar.";
   el("blackout").classList.add("on");   // modo discreto automático ao gravar (3 toques revelam)
@@ -521,8 +521,8 @@ function pararGravacao() {
 
   el("btnRec").classList.remove("gravando");
   el("recWrap").classList.remove("gravando");
-  el("recIcon").textContent = "●";
-  el("recLabel").textContent = "Gravar";
+  el("recIcon").textContent = "◎";
+  el("recLabel").textContent = "GPS ativo";
   soltarWakeLock();
 }
 
@@ -941,7 +941,7 @@ el("btnRec").addEventListener("click", () => { gravando ? pararGravacao() : inic
 el("btnNova").addEventListener("click", () => {
   mostrarTela("gravador");
   el("timer").textContent = "00:00";
-  el("hint").textContent = "Toque para começar a gravar a reunião.";
+  el("hint").textContent = "Toque para ativar.";
   el("ctxText").value = "";
   mainBlob = null;
 });
