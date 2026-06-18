@@ -277,6 +277,9 @@ body {
 .seg { display: inline-flex; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: var(--r-pill); padding: 3px; }
 .seg button { font-family: var(--font-display); font-size: 8pt; font-weight: 600; color: var(--text-soft); background: transparent; border: none; padding: 6px 14px; border-radius: var(--r-pill); cursor: pointer; transition: all .15s ease; }
 .seg button.on { color: #0a0e17; background: var(--grad); }
+.pessoas { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.step-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border); background: transparent; color: var(--text); font-size: 13pt; line-height: 1; cursor: pointer; }
+.step-num { font-family: var(--font-display); font-size: 13pt; font-weight: 600; min-width: 20px; text-align: center; }
 .gate { position: fixed; inset: 0; z-index: 100; background: rgba(7,10,18,0.92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 20px; }
 .gate-card { width: 100%; max-width: 320px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xl); padding: 28px 22px; text-align: center; box-shadow: 0 24px 70px rgba(0,0,0,0.55); }
 .gate-title { font-family: var(--font-display); font-size: 15pt; font-weight: 700; background: var(--grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
@@ -359,6 +362,12 @@ body {
             <button data-r="rigido">Rígido</button>
           </div>
         </div>
+        <div class="pessoas">
+          <span class="rigor-lbl">Pessoas</span>
+          <button class="step-btn" id="pMenos">−</button>
+          <span class="step-num" id="pNum">2</span>
+          <button class="step-btn" id="pMais">+</button>
+        </div>
         <div class="hint" id="dicaVoz" style="margin-top:10px;">Ao parar, você explica o contexto da conversa.</div>
         <button id="btnDiscreto" class="discreto-btn">Tela preta (modo discreto)</button>
         <button id="btnHist" class="discreto-btn" style="margin-left:8px;">📈 Evolução</button>
@@ -370,6 +379,13 @@ body {
       <div id="tela-contexto" class="hidden">
         <div class="ctx-titulo">Contexto da conversa</div>
         <p class="ctx-sub">Quem é você na conversa, com quem falou e a situação. Ajuda a IA a te achar e a julgar com nuance.</p>
+        <div class="pessoas" style="margin-bottom:14px;">
+          <span class="rigor-lbl" id="detLoc">2 locutores</span>
+          <button class="step-btn" id="pMenos2">−</button>
+          <span class="step-num" id="pNum2">2</span>
+          <button class="step-btn" id="pMais2">+</button>
+          <button class="btn-ghost" id="btnRetranscrever">Re-transcrever</button>
+        </div>
         <textarea id="ctxText" class="ctx-text" placeholder="Ex: Sou eu cobrando o prazo do fornecedor João. Foi uma conversa tensa, ele estava na defensiva."></textarea>
         <div class="ctx-acoes">
           <button id="btnDitar" class="btn-ghost"><span id="ditarLbl">🎤 Ditar</span></button>
@@ -431,7 +447,7 @@ body {
 
     </div>
   </div>
-  <div class="footer">FALA DIREITO! · FASE 1 · v0.29</div>
+  <div class="footer">FALA DIREITO! · FASE 1 · v0.30</div>
 </div>
 <div id="blackout"></div>
 
@@ -455,6 +471,7 @@ let idxAtual = 0;
 let convoWords = [];
 let turnsArr = [];
 let identidades = [];
+let numPessoas = 2;
 
 const el = (id) => document.getElementById(id);
 
@@ -819,6 +836,7 @@ async function transcreveConversa() {
   el("procPasso").textContent = "Transcrevendo…";
   const fd = new FormData();
   fd.append("audio", mainBlob, "gravacao.webm");
+  fd.append("num_speakers", String(numPessoas));
   try {
     const r = await fetch("/api/transcribe-convo", { method: "POST", headers: { "x-app-pass": APP_PASS }, body: fd });
     if (r.status === 401) { sairAcesso("Senha incorreta. Entre de novo."); return; }
@@ -827,6 +845,7 @@ async function transcreveConversa() {
     convoWords = d.words || [];
     if (!convoWords.length) throw new Error("Não consegui transcrever (áudio curto/sem voz?).");
     mapearIdentidades();
+    el("detLoc").textContent = identidades.length + (identidades.length === 1 ? " locutor" : " locutores");
     el("ctxStatus").textContent = "";
     mostrarTela("contexto");
   } catch (e) {
@@ -915,6 +934,12 @@ async function rodarAnalise() {
 }
 el("btnRevisar").addEventListener("click", () => { construirTurnsArr(); renderRevisao(); mostrarTela("revisao"); });
 el("btnRevOk").addEventListener("click", () => mostrarTela("contexto"));
+function setPessoas(n) { numPessoas = Math.max(1, Math.min(8, n)); el("pNum").textContent = numPessoas; el("pNum2").textContent = numPessoas; }
+el("pMenos").addEventListener("click", () => setPessoas(numPessoas - 1));
+el("pMais").addEventListener("click", () => setPessoas(numPessoas + 1));
+el("pMenos2").addEventListener("click", () => setPessoas(numPessoas - 1));
+el("pMais2").addEventListener("click", () => setPessoas(numPessoas + 1));
+el("btnRetranscrever").addEventListener("click", transcreveConversa);
 
 // ---- histórico de evolução (carcaça, salvo no aparelho via localStorage) ----
 function salvarHistorico(d) {

@@ -31,6 +31,8 @@ export async function onRequestPost(context) {
     f.append("language_code", "pt");
     f.append("diarize", "true");
     f.append("timestamps_granularity", "word");
+    const n = parseInt(form.get("num_speakers") || "0", 10);
+    if (n >= 1 && n <= 12) f.append("num_speakers", String(n));
     const r = await fetch(STT_URL, { method: "POST", headers: { "xi-api-key": key }, body: f });
     if (!r.ok) { const d = await r.text(); return json({ erro: "Falha na transcrição (ElevenLabs " + r.status + "): " + d.slice(0, 150) }, 502); }
     const stt = await r.json();
