@@ -298,7 +298,7 @@ body {
 .bar { width: 7px; border-radius: 3px 3px 0 0; }
 .bar.ok { background: var(--ok); }
 .bar.er { background: var(--erro); }
-.hist-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 10px 14px; margin-bottom: 8px; }
+.hist-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 10px 14px; margin-bottom: 8px; cursor: pointer; }
 .hist-top { display: flex; justify-content: space-between; align-items: center; }
 .hist-data { font-family: var(--font-display); font-size: 8pt; color: var(--text-soft); }
 .hist-meta { font-size: 8pt; color: var(--text-dim); margin-top: 4px; }
@@ -413,7 +413,7 @@ body {
 
     </div>
   </div>
-  <div class="footer">FALA DIREITO! · FASE 1 · v0.19</div>
+  <div class="footer">FALA DIREITO! · FASE 1 · v0.20</div>
 </div>
 <div id="blackout"></div>
 
@@ -584,7 +584,6 @@ function renderResultado(d) {
       refBloco.innerHTML += `<div class="reflexao"><div class="t">🪞 Auto-observação</div>${r}</div>`;
     });
   }
-  salvarHistorico(d);
 }
 
 // ---- trava de acesso por senha ----
@@ -656,6 +655,7 @@ async function analisar() {
     if (!resp.ok) throw new Error((dados && dados.erro) ? dados.erro : ("HTTP " + resp.status));
     renderResultado(dados);
     mostrarTela("resultado");
+    salvarHistorico(dados);
   } catch (e) {
     mostrarTela("contexto");
     el("ctxStatus").textContent = "Erro: " + e.message;
@@ -707,15 +707,8 @@ el("btnAnalisar").addEventListener("click", analisar);
 function salvarHistorico(d) {
   try {
     const hist = JSON.parse(localStorage.getItem("fd_hist") || "[]");
-    hist.unshift({
-      data: new Date().toISOString(),
-      acertos: (d.placar && d.placar.acertos) || 0,
-      erros: (d.placar && d.placar.erros) || 0,
-      ritmo: (d.metricas && d.metricas.ritmo_ppm) || 0,
-      muletas: (d.metricas && d.metricas.hesitacao) || 0,
-      erros_regras: (d.itens || []).filter((i) => i.tipo === "erro").map((i) => i.regra),
-    });
-    localStorage.setItem("fd_hist", JSON.stringify(hist.slice(0, 100)));
+    hist.unshift(Object.assign({ data: new Date().toISOString() }, d));  // guarda o laudo COMPLETO
+    localStorage.setItem("fd_hist", JSON.stringify(hist.slice(0, 50)));
   } catch (e) {}
 }
 function renderHistorico() {
@@ -723,17 +716,25 @@ function renderHistorico() {
   try { hist = JSON.parse(localStorage.getItem("fd_hist") || "[]"); } catch (e) {}
   const trend = el("histTrend"), lista = el("histLista");
   if (!hist.length) { trend.innerHTML = ""; lista.innerHTML = '<p class="ctx-sub">Ainda sem análises salvas. Faça uma e ela aparece aqui.</p>'; return; }
+  const ac = (h) => (h.placar && h.placar.acertos) || 0;
+  const er = (h) => (h.placar && h.placar.erros) || 0;
   const ult = hist.slice(0, 12).reverse();
-  const maxv = Math.max(1, ...ult.map((h) => Math.max(h.acertos, h.erros)));
+  const maxv = Math.max(1, ...ult.map((h) => Math.max(ac(h), er(h))));
   trend.innerHTML = ult.map((h) => {
-    const ha = Math.round((h.acertos / maxv) * 60), he = Math.round((h.erros / maxv) * 60);
+    const ha = Math.round((ac(h) / maxv) * 60), he = Math.round((er(h) / maxv) * 60);
     return `<div class="bar-col"><div class="bar ok" style="height:${ha}px"></div><div class="bar er" style="height:${he}px"></div></div>`;
   }).join("");
-  lista.innerHTML = hist.map((h) => {
+  lista.innerHTML = hist.map((h, i) => {
     const dt = new Date(h.data).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
-    const top = (h.erros_regras && h.erros_regras.length) ? h.erros_regras.slice(0, 3).join(", ") : "—";
-    return `<div class="hist-card"><div class="hist-top"><span class="hist-data">${dt}</span><span class="m">✅ ${h.acertos} · ⚠️ ${h.erros}</span></div><div class="hist-meta">🏃 ${h.ritmo} ppm · 🤐 ${h.muletas} muletas · erros: ${top}</div></div>`;
+    const ritmo = (h.metricas && h.metricas.ritmo_ppm) || 0;
+    const mul = (h.metricas && h.metricas.hesitacao) || 0;
+    return `<div class="hist-card" onclick="verLaudo(${i})"><div class="hist-top"><span class="hist-data">${dt}</span><span class="m">✅ ${ac(h)} · ⚠️ ${er(h)}</span></div><div class="hist-meta">🏃 ${ritmo} ppm · 🤐 ${mul} muletas · toque para ver o laudo</div></div>`;
   }).join("");
+}
+function verLaudo(i) {
+  let hist = [];
+  try { hist = JSON.parse(localStorage.getItem("fd_hist") || "[]"); } catch (e) {}
+  if (hist[i]) { renderResultado(hist[i]); mostrarTela("resultado"); }
 }
 el("btnHist").addEventListener("click", () => { renderHistorico(); mostrarTela("historico"); });
 el("btnHist2").addEventListener("click", () => { renderHistorico(); mostrarTela("historico"); });
