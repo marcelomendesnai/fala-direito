@@ -305,6 +305,9 @@ body {
 .hist-top { display: flex; justify-content: space-between; align-items: center; }
 .hist-data { font-family: var(--font-display); font-size: 8pt; color: var(--text-soft); }
 .hist-meta { font-size: 8pt; color: var(--text-dim); margin-top: 4px; }
+.turn { display: flex; gap: 8px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.turn-spk { flex: 0 0 auto; background: rgba(124,92,255,0.16); color: #c3b6ff; border: 1px solid rgba(124,92,255,0.3); border-radius: var(--r-pill); font-family: var(--font-display); font-size: 7.5pt; font-weight: 600; padding: 3px 10px; cursor: pointer; }
+.turn-txt { font-size: 9pt; color: var(--text); line-height: 1.5; }
 .hidden { display: none !important; }
 
 @media (min-width: 768px) {
@@ -369,9 +372,19 @@ body {
         <textarea id="ctxText" class="ctx-text" placeholder="Ex: Sou eu cobrando o prazo do fornecedor João. Foi uma conversa tensa, ele estava na defensiva."></textarea>
         <div class="ctx-acoes">
           <button id="btnDitar" class="btn-ghost"><span id="ditarLbl">🎤 Ditar</span></button>
-          <button id="btnAnalisar" class="btn-sec">Analisar</button>
+        </div>
+        <div class="ctx-acoes">
+          <button id="btnRevisar" class="btn-ghost">Revisar transcrição</button>
+          <button id="btnAnalisar" class="btn-sec">Rodar análise</button>
         </div>
         <div class="ctx-status" id="ctxStatus"></div>
+      </div>
+
+      <div id="tela-revisao" class="hidden">
+        <div class="ctx-titulo">Revisar transcrição</div>
+        <p class="ctx-sub">Toque no rótulo do locutor pra trocar quem falou cada parte. Depois conclua e rode a análise.</p>
+        <div id="revLista"></div>
+        <div class="acoes"><button id="btnRevOk" class="btn-sec">Concluir e voltar</button></div>
       </div>
 
       <div id="tela-processando" class="processando hidden">
@@ -417,7 +430,7 @@ body {
 
     </div>
   </div>
-  <div class="footer">FALA DIREITO! · FASE 1 · v0.22</div>
+  <div class="footer">FALA DIREITO! · FASE 1 · v0.23</div>
 </div>
 <div id="blackout"></div>
 
@@ -438,6 +451,8 @@ let ultimaSessao = null;
 let ultimoContexto = "";
 let modoRejulgar = false;
 let idxAtual = 0;
+let convoWords = [];
+let turnsArr = [];
 
 const el = (id) => document.getElementById(id);
 
@@ -447,6 +462,7 @@ function mostrarTela(nome) {
   el("tela-contexto").classList.toggle("hidden", nome !== "contexto");
   el("tela-resultado").classList.toggle("hidden", nome !== "resultado");
   el("tela-historico").classList.toggle("hidden", nome !== "historico");
+  el("tela-revisao").classList.toggle("hidden", nome !== "revisao");
 }
 
 function fmt(s) {
@@ -654,8 +670,8 @@ function irParaContexto() {
   }
   el("ctxStatus").textContent = "";
   modoRejulgar = false;
-  el("btnAnalisar").textContent = "Analisar";
-  mostrarTela("contexto");
+  el("btnAnalisar").textContent = "Rodar análise";
+  transcreveConversa();
 }
 
 async function analisar() {
@@ -722,7 +738,7 @@ async function transcreverContexto() {
   } catch (e) { el("ctxStatus").textContent = "Erro ao transcrever."; }
 }
 el("btnDitar").addEventListener("click", ditarToggle);
-el("btnAnalisar").addEventListener("click", () => (modoRejulgar ? reanalisar() : analisar()));
+el("btnAnalisar").addEventListener("click", () => (modoRejulgar ? reanalisar() : rodarAnalise()));
 el("btnCorrigir").addEventListener("click", () => {
   if (!ultimaSessao) { el("ctxStatus").textContent = ""; return; }
   modoRejulgar = true;
@@ -762,6 +778,90 @@ function substituirHistorico(idx, d) {
     if (hist[idx]) { hist[idx] = Object.assign({ data: hist[idx].data || new Date().toISOString() }, d); localStorage.setItem("fd_hist", JSON.stringify(hist)); }
   } catch (e) {}
 }
+
+// ---- transcrever a conversa, revisar locutores e rodar a análise ----
+async function transcreveConversa() {
+  if (!mainBlob) return;
+  mostrarTela("processando");
+  el("procPasso").textContent = "Transcrevendo…";
+  const fd = new FormData();
+  fd.append("audio", mainBlob, "gravacao.webm");
+  try {
+    const r = await fetch("/api/transcribe-convo", { method: "POST", headers: { "x-app-pass": APP_PASS }, body: fd });
+    if (r.status === 401) { sairAcesso("Senha incorreta. Entre de novo."); return; }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error((d && d.erro) ? d.erro : ("HTTP " + r.status));
+    convoWords = d.words || [];
+    if (!convoWords.length) throw new Error("Não consegui transcrever (áudio curto/sem voz?).");
+    el("ctxStatus").textContent = "";
+    mostrarTela("contexto");
+  } catch (e) {
+    mostrarTela("gravador");
+    el("avisoMic").classList.remove("hidden");
+    el("avisoMic").innerHTML = "<b>Erro na transcrição.</b> " + e.message;
+  }
+}
+
+function construirTurnosStr(words) {
+  const t = []; let cur = null;
+  for (const w of words) { if (!cur || cur.spk !== w.spk) { cur = { spk: w.spk, txt: w.t }; t.push(cur); } else cur.txt += " " + w.t; }
+  return t.map((x) => `Locutor ${x.spk}: ${x.txt}`).join("\n").replace(/\s+([.,!?;:])/g, "$1");
+}
+function calcMetricasJS(words, alvo) {
+  const sorted = words.slice().sort((a, b) => (a.s || 0) - (b.s || 0));
+  let talk = 0, p = 0, maior = 0, c = 0;
+  for (let i = 0; i < sorted.length; i++) {
+    const w = sorted[i]; if (w.spk !== alvo) continue; c++;
+    if (w.s != null && w.e != null) talk += Math.max(0, w.e - w.s);
+    if (i > 0 && sorted[i - 1].spk === alvo) { const g = (w.s || 0) - (sorted[i - 1].e || 0); if (g > 0 && g < 2) talk += g; if (g > 1.2) { p++; if (g > maior) maior = g; } }
+  }
+  const ritmo = talk > 0 ? Math.round(c / (talk / 60)) : 0;
+  const txt = " " + sorted.filter((w) => w.spk === alvo).map((w) => w.t).join(" ").toLowerCase() + " ";
+  const muletas = ["né", "tipo", "então", "aí", "sabe", "entendeu", "cara"]; let h = 0;
+  for (const m of muletas) { const re = new RegExp("\\b" + m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "g"); h += (txt.match(re) || []).length; }
+  return { ritmo_ppm: ritmo, pausas: p ? `${p} (maior ${maior.toFixed(1)}s)` : "nenhuma longa", hesitacao: h };
+}
+function construirTurnsArr() {
+  turnsArr = []; let cur = null;
+  convoWords.forEach((w, idx) => { if (!cur || cur.spk !== w.spk) { cur = { spk: w.spk, ini: idx, fim: idx, txt: w.t }; turnsArr.push(cur); } else { cur.fim = idx; cur.txt += " " + w.t; } });
+}
+function renderRevisao() {
+  construirTurnsArr();
+  el("revLista").innerHTML = turnsArr.map((t, i) => `<div class="turn"><button class="turn-spk" onclick="ciclarLocutor(${i})">${t.spk}</button><span class="turn-txt">${t.txt.replace(/</g, "&lt;")}</span></div>`).join("");
+}
+function ciclarLocutor(i) {
+  const labels = [...new Set(convoWords.map((w) => w.spk))].sort();
+  if (labels.length < 2) return;
+  const t = turnsArr[i]; const prox = labels[(labels.indexOf(t.spk) + 1) % labels.length];
+  for (let k = t.ini; k <= t.fim; k++) convoWords[k].spk = prox;
+  renderRevisao();
+}
+async function rodarAnalise() {
+  if (!convoWords.length) return;
+  mostrarTela("processando");
+  el("procPasso").textContent = "Analisando…";
+  const turnos = construirTurnosStr(convoWords);
+  const labels = [...new Set(convoWords.map((w) => w.spk))];
+  const metricasPorLabel = {}; labels.forEach((L) => { metricasPorLabel[L] = calcMetricasJS(convoWords, L); });
+  const dominante = labels.slice().sort((a, b) => convoWords.filter((w) => w.spk === b).length - convoWords.filter((w) => w.spk === a).length)[0];
+  try {
+    const resp = await fetch("/api/rejudge", { method: "POST", headers: { "x-app-pass": APP_PASS, "content-type": "application/json" }, body: JSON.stringify({ turnos, metricas: metricasPorLabel, dominante, contexto: el("ctxText").value.trim(), rigor: RIGOR }) });
+    if (resp.status === 401) { sairAcesso("Senha incorreta. Entre de novo."); return; }
+    const dados = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error((dados && dados.erro) ? dados.erro : ("HTTP " + resp.status));
+    renderResultado(dados);
+    mostrarTela("resultado");
+    ultimaSessao = dados._sessao || { turnos, metricasPorLabel, dominante };
+    ultimoContexto = el("ctxText").value.trim();
+    idxAtual = 0;
+    salvarHistorico(dados);
+  } catch (e) {
+    mostrarTela("contexto");
+    el("ctxStatus").textContent = "Erro: " + e.message;
+  }
+}
+el("btnRevisar").addEventListener("click", () => { renderRevisao(); mostrarTela("revisao"); });
+el("btnRevOk").addEventListener("click", () => mostrarTela("contexto"));
 
 // ---- histórico de evolução (carcaça, salvo no aparelho via localStorage) ----
 function salvarHistorico(d) {
