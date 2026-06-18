@@ -431,7 +431,7 @@ body {
 
     </div>
   </div>
-  <div class="footer">FALA DIREITO! · FASE 1 · v0.24</div>
+  <div class="footer">FALA DIREITO! · FASE 1 · v0.25</div>
 </div>
 <div id="blackout"></div>
 
@@ -509,6 +509,7 @@ async function iniciarGravacao() {
   el("recIcon").textContent = "■";
   el("recLabel").textContent = "Parar";
   el("hint").textContent = "Gravando… toque para parar e analisar.";
+  el("blackout").classList.add("on");   // modo discreto automático ao gravar (3 toques revelam)
 }
 
 function pararGravacao() {
