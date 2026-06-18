@@ -431,7 +431,7 @@ body {
 
     </div>
   </div>
-  <div class="footer">FALA DIREITO! · FASE 1 · v0.26</div>
+  <div class="footer">FALA DIREITO! · FASE 1 · v0.27</div>
 </div>
 <div id="blackout"></div>
 
@@ -454,6 +454,7 @@ let modoRejulgar = false;
 let idxAtual = 0;
 let convoWords = [];
 let turnsArr = [];
+let identidades = [];
 
 const el = (id) => document.getElementById(id);
 
@@ -595,7 +596,7 @@ function renderResultado(d) {
   mWrap.innerHTML = "";
   if (d.voce) {
     const via = d.voce.como === "marcador" ? "" : " (auto)";
-    mWrap.innerHTML += `<span class="m">🎙️ você = Locutor ${d.voce.locutor}${via}</span>`;
+    mWrap.innerHTML += `<span class="m">🎙️ você = ${d.voce.locutor}${via}</span>`;
   }
   if (d.metricas) {
     const m = d.metricas;
@@ -813,6 +814,7 @@ async function transcreveConversa() {
     if (!r.ok) throw new Error((d && d.erro) ? d.erro : ("HTTP " + r.status));
     convoWords = d.words || [];
     if (!convoWords.length) throw new Error("Não consegui transcrever (áudio curto/sem voz?).");
+    mapearIdentidades();
     el("ctxStatus").textContent = "";
     mostrarTela("contexto");
   } catch (e) {
@@ -841,18 +843,37 @@ function calcMetricasJS(words, alvo) {
   for (const m of muletas) { const re = new RegExp("\\b" + m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "g"); h += (txt.match(re) || []).length; }
   return { ritmo_ppm: ritmo, pausas: p ? `${p} (maior ${maior.toFixed(1)}s)` : "nenhuma longa", hesitacao: h };
 }
+const CORES = [
+  { bg: "rgba(124,92,255,0.18)", bd: "rgba(124,92,255,0.45)", fg: "#c3b6ff" },
+  { bg: "rgba(34,211,238,0.18)", bd: "rgba(34,211,238,0.45)", fg: "#9fe8f5" },
+  { bg: "rgba(255,93,115,0.18)", bd: "rgba(255,93,115,0.45)", fg: "#ffb3bf" },
+  { bg: "rgba(255,178,77,0.18)", bd: "rgba(255,178,77,0.45)", fg: "#ffd9a3" },
+];
+function mapearIdentidades() {
+  const cont = {}; convoWords.forEach((w) => { cont[w.spk] = (cont[w.spk] || 0) + 1; });
+  const letras = [...new Set(convoWords.map((w) => w.spk))];
+  const dom = letras.slice().sort((a, b) => cont[b] - cont[a])[0];
+  const nomeDe = {}; let bi = 0;
+  letras.forEach((L) => { if (L === dom) nomeDe[L] = "Marcelo"; else { nomeDe[L] = "Locutor " + String.fromCharCode(66 + bi); bi++; } });
+  convoWords.forEach((w) => { w.spk = nomeDe[w.spk]; });
+  identidades = [...new Set(convoWords.map((w) => w.spk))];
+}
 function construirTurnsArr() {
   turnsArr = []; let cur = null;
   convoWords.forEach((w, idx) => { if (!cur || cur.spk !== w.spk) { cur = { spk: w.spk, ini: idx, fim: idx, txt: w.t }; turnsArr.push(cur); } else { cur.fim = idx; cur.txt += " " + w.t; } });
 }
 function renderRevisao() {
-  construirTurnsArr();
-  el("revLista").innerHTML = turnsArr.map((t, i) => `<div class="turn"><button class="turn-spk" onclick="ciclarLocutor(${i})">${t.spk}</button><span class="turn-txt">${t.txt.replace(/</g, "&lt;")}</span></div>`).join("");
+  const cor = (nome) => CORES[Math.max(0, identidades.indexOf(nome)) % CORES.length];
+  el("revLista").innerHTML = turnsArr.map((t, i) => {
+    const c = cor(t.spk);
+    return `<div class="turn"><button class="turn-spk" style="background:${c.bg};border-color:${c.bd};color:${c.fg};" onclick="ciclarLocutor(${i})">${t.spk}</button><span class="turn-txt">${t.txt.replace(/</g, "&lt;")}</span></div>`;
+  }).join("");
 }
 function ciclarLocutor(i) {
-  const labels = [...new Set(convoWords.map((w) => w.spk))].sort();
-  if (labels.length < 2) return;
-  const t = turnsArr[i]; const prox = labels[(labels.indexOf(t.spk) + 1) % labels.length];
+  if (identidades.length < 2) return;
+  const t = turnsArr[i];
+  const prox = identidades[(identidades.indexOf(t.spk) + 1) % identidades.length];
+  t.spk = prox;
   for (let k = t.ini; k <= t.fim; k++) convoWords[k].spk = prox;
   renderRevisao();
 }
@@ -880,7 +901,7 @@ async function rodarAnalise() {
     el("ctxStatus").textContent = "Erro: " + e.message;
   }
 }
-el("btnRevisar").addEventListener("click", () => { renderRevisao(); mostrarTela("revisao"); });
+el("btnRevisar").addEventListener("click", () => { construirTurnsArr(); renderRevisao(); mostrarTela("revisao"); });
 el("btnRevOk").addEventListener("click", () => mostrarTela("contexto"));
 
 // ---- histórico de evolução (carcaça, salvo no aparelho via localStorage) ----

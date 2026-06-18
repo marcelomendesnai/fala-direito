@@ -27,7 +27,7 @@ export async function onRequestPost(context) {
     if (!turnos) return json({ erro: "Sem transcrição para reanalisar." }, 400);
 
     const veredicto = await chamarMentor({ turnos, contexto, dominante, metricasPorLabel, rigor, key: anthropicKey });
-    let locutor = (veredicto.locutor || "").toUpperCase().replace(/[^A-Z]/g, "") || dominante;
+    let locutor = (veredicto.locutor || "").trim();
     if (!metricasPorLabel[locutor]) locutor = dominante;
 
     const itens = veredicto.itens || [];

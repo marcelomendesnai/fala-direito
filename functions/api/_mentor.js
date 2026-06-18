@@ -20,7 +20,7 @@ NÍVEL DE RIGOR DESTA ANÁLISE: ${rigorTxt}
 ${MANUAL}
 
 INSTRUÇÕES:
-- A CONVERSA vem separada por locutor (Locutor A, B, ...). Use o CONTEXTO informado pelo Marcelo para identificar QUAL locutor é ele. ATENÇÃO: as palavras de cada locutor são SÓ dele — nunca atribua ao Marcelo o que outro locutor disse. Se o contexto não permitir identificar, use o Locutor ${dominante} (quem mais falou).
+- A CONVERSA vem separada por locutor (Locutor A, B, ...). Use o CONTEXTO informado pelo Marcelo para identificar QUAL locutor é ele. ATENÇÃO: as palavras de cada locutor são SÓ dele — nunca atribua ao Marcelo o que outro locutor disse. Se o contexto não permitir identificar, use o "${dominante}". Responda no campo "locutor" o NOME EXATO de um dos locutores listados (ex: Marcelo).
 - Avalie SOMENTE a fala do locutor que é o Marcelo, contra as regras A1–A14. Use o resto da conversa só para entender a situação.
 - Use o CONTEXTO para dar nuance (negociação, bronca, reunião etc.), mas o gabarito continua sendo o manual.
 - Use o trecho EXATO da fala dele como evidência. Sem trecho, não acuse. Para erros, dê a reescrita melhor (curta).
@@ -33,7 +33,7 @@ ${metricasTxt}
 
 Responda APENAS com JSON válido, sem markdown, neste formato exato:
 {
-  "locutor": "A",
+  "locutor": "Marcelo",
   "resumo": "2-3 frases diretas (diga em 1 frase como identificou o Marcelo)",
   "itens": [
     { "regra": "A6", "titulo": "nome curto", "tipo": "acerto" ou "erro", "trecho": "trecho exato da fala do Marcelo", "comentario": "por que", "reescrita": "como dizer melhor (só se erro)" }
