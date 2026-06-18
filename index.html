@@ -216,6 +216,9 @@ body {
   background: var(--surface-2); border: 1px solid var(--border); color: var(--text-soft);
   border-radius: var(--r-pill); padding: 5px 13px; font-size: 8pt; font-weight: 700;
 }
+.metricas .m.zona-ok { color: var(--ok); border-color: rgba(46,230,166,0.4); }
+.metricas .m.zona-aten { color: var(--amber); border-color: rgba(255,178,77,0.4); }
+.metricas .m.zona-ruim { color: var(--erro); border-color: rgba(255,93,115,0.4); }
 
 .sec-h {
   font-family: var(--font-display);
@@ -413,7 +416,7 @@ body {
 
     </div>
   </div>
-  <div class="footer">FALA DIREITO! · FASE 1 · v0.20</div>
+  <div class="footer">FALA DIREITO! · FASE 1 · v0.21</div>
 </div>
 <div id="blackout"></div>
 
@@ -533,6 +536,14 @@ async function enviarAudio() {
   }
 }
 
+function zonaRitmo(p) {
+  if (p < 110) return { cls: "zona-ruim", txt: "arrastado" };
+  if (p < 130) return { cls: "zona-aten", txt: "meio lento" };
+  if (p <= 150) return { cls: "zona-ok", txt: "zona de confiança" };
+  if (p <= 165) return { cls: "zona-aten", txt: "meio rápido" };
+  return { cls: "zona-ruim", txt: "corrido" };
+}
+
 function renderResultado(d) {
   const placar = d.placar || {};
   el("kpiAcertos").textContent = placar.acertos ?? 0;
@@ -548,7 +559,7 @@ function renderResultado(d) {
   }
   if (d.metricas) {
     const m = d.metricas;
-    if (m.ritmo_ppm)  mWrap.innerHTML += `<span class="m">🏃 ${m.ritmo_ppm} ppm</span>`;
+    if (m.ritmo_ppm)  mWrap.innerHTML += `<span class="m ${zonaRitmo(m.ritmo_ppm).cls}">🏃 ${m.ritmo_ppm} ppm · ${zonaRitmo(m.ritmo_ppm).txt}</span>`;
     if (m.pausas)     mWrap.innerHTML += `<span class="m">⏸️ ${m.pausas}</span>`;
     if (m.hesitacao != null) mWrap.innerHTML += `<span class="m">🤐 ${m.hesitacao} muletas</span>`;
   }
