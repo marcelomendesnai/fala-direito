@@ -26,7 +26,8 @@ INSTRUÇÕES:
 - Use o trecho EXATO da fala dele como evidência. Sem trecho, não acuse. Para erros, dê a reescrita melhor (curta).
 - Reflexões da Parte B só quando houver gatilho verbal. Reflexão é PERGUNTA, nunca afirmação sobre o corpo.
 - Comente ritmo e pausas no resumo (use as métricas do locutor que você identificou como Marcelo). Pausa pode ser estratégica (A6) ou travamento.
-- Seja econômico: só itens com evidência real.
+- Seja econômico nos itens: só com evidência real.
+- PROFUNDIDADE (nível estudo, NÃO "cara de IA"): além de listar erros, faça uma LEITURA do conjunto. Qual o padrão psicológico por trás (vício em aprovação, medo do conflito, necessidade de controle, insegurança — use a camada de embasamento)? Como o contexto e a reação do outro pesaram? Conecte os pontos, cite evidências da fala, seja específico. Zero clichê, zero elogio vazio, zero conselho genérico.
 
 Métricas por locutor (já calculadas):
 ${metricasTxt}
@@ -34,6 +35,7 @@ ${metricasTxt}
 Responda APENAS com JSON válido, sem markdown, neste formato exato:
 {
   "locutor": "Marcelo",
+  "leitura": "ANÁLISE PROFUNDA do todo (4-6 frases densas, de mentor sênior): o padrão psicológico por trás dos erros, a raiz, como o contexto e o outro influenciaram. Não repita o resumo nem liste regras aqui.",
   "resumo": "2-3 frases diretas (diga em 1 frase como identificou o Marcelo)",
   "itens": [
     { "regra": "A6", "titulo": "nome curto", "tipo": "acerto" ou "erro", "trecho": "trecho exato da fala do Marcelo", "comentario": "por que", "reescrita": "como dizer melhor (só se erro)" }
@@ -46,7 +48,7 @@ Responda APENAS com JSON válido, sem markdown, neste formato exato:
 CONVERSA (separada por locutor):
 ${turnos}`;
 
-  const body = { model: MENTOR_MODEL, max_tokens: 2500, system, messages: [{ role: "user", content: user }] };
+  const body = { model: MENTOR_MODEL, max_tokens: 3200, system, messages: [{ role: "user", content: user }] };
   const r = await fetch(ANTHROPIC_URL, {
     method: "POST",
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },

@@ -322,7 +322,12 @@ body {
 #splash .sp-word { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 30pt; color: #2D2A26; letter-spacing: .5px; margin-top: 16px; }
 #splash .sp-2 { color: #A0673C; }
 #splash .sp-sign { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 12pt; color: #7E5230; margin-top: 8px; }
+#splash .sp-castor { border-radius: 50%; }
+#splash .sp-app { font-family: var(--font-display); font-size: 8pt; color: #a08b6e; margin-top: 20px; letter-spacing: 1.5px; text-transform: uppercase; }
 @keyframes splashOut { to { opacity: 0; visibility: hidden; } }
+.regra-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 10px 14px; margin-bottom: 8px; }
+.regra-item .cod { font-family: var(--font-display); font-weight: 600; color: #c3b6ff; font-size: 8pt; }
+.regra-item .txt { font-size: 8.5pt; color: var(--text); margin-top: 3px; line-height: 1.5; }
 .hidden { display: none !important; }
 
 @media (min-width: 768px) {
@@ -337,9 +342,10 @@ body {
 </head>
 <body>
 <div id="splash">
-  <svg width="96" height="96" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="M2Labs"><circle cx="100" cy="100" r="92" fill="#F1E5D2" stroke="#E1CFB2" stroke-width="3"/><circle cx="71" cy="60" r="20" fill="#7E5230"/><circle cx="129" cy="60" r="20" fill="#7E5230"/><circle cx="71" cy="63" r="9" fill="#BC8E60"/><circle cx="129" cy="63" r="9" fill="#BC8E60"/><ellipse cx="100" cy="98" rx="64" ry="58" fill="#9A6638"/><path d="M47 70 Q100 35 153 70" fill="none" stroke="#85562D" stroke-width="4" stroke-linecap="round" opacity="0.5"/><ellipse cx="100" cy="128" rx="44" ry="33" fill="#CFA274"/><circle cx="76" cy="82" r="9" fill="#2B1C10"/><circle cx="124" cy="82" r="9" fill="#2B1C10"/><circle cx="79" cy="79" r="2.6" fill="#FFFFFF"/><circle cx="127" cy="79" r="2.6" fill="#FFFFFF"/><ellipse cx="100" cy="110" rx="13" ry="9" fill="#3A2415"/><rect x="91" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><rect x="101" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><line x1="64" y1="124" x2="32" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="64" y1="132" x2="33" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="124" x2="168" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="132" x2="167" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/></svg>
+  <img class="sp-castor" src="m2labs-castor.png" alt="M2Labs" width="108" height="108">
   <div class="sp-word">M<span class="sp-2">2</span>Labs</div>
   <div class="sp-sign">por Marcelo Mendes</div>
+  <div class="sp-app">Fala direito! · v0.35</div>
 </div>
 <div class="wrap">
   <div id="gate" class="gate hidden">
@@ -381,6 +387,7 @@ body {
         <div class="hint" id="dicaVoz" style="margin-top:10px;">Ao parar, você informa as pessoas e o contexto.</div>
         <button id="btnDiscreto" class="discreto-btn">Tela preta (modo discreto)</button>
         <button id="btnHist" class="discreto-btn" style="margin-left:8px;">📈 Evolução</button>
+        <button id="btnRegras" class="discreto-btn" style="margin-left:8px;">📜 Regras</button>
         <div class="aviso hidden" id="avisoMic">
           <b>Microfone bloqueado.</b> Libere o acesso ao microfone no navegador. A gravação só funciona no site publicado (HTTPS), não abrindo o arquivo direto.
         </div>
@@ -413,6 +420,13 @@ body {
         <div class="acoes"><button id="btnRevOk" class="btn-sec">Concluir e voltar</button></div>
       </div>
 
+      <div id="tela-regras" class="hidden">
+        <div class="ctx-titulo">Suas 14 regras</div>
+        <p class="ctx-sub">Revise antes da reunião. O Mentor avalia sua fala contra estas.</p>
+        <div id="regrasLista"></div>
+        <div class="acoes"><button class="btn-sec" id="btnRegrasVoltar">Voltar</button></div>
+      </div>
+
       <div id="tela-processando" class="processando hidden">
         <div class="spinner"></div>
         <div class="passo" id="procPasso">Enviando áudio…</div>
@@ -424,6 +438,11 @@ body {
           <div class="kpi ok"><div class="num" id="kpiAcertos">0</div><div class="lbl">Acertos</div></div>
           <div class="kpi erro"><div class="num" id="kpiErros">0</div><div class="lbl">Erros</div></div>
           <div class="kpi neutro"><div class="num" id="kpiRegras">0</div><div class="lbl">Regras</div></div>
+        </div>
+
+        <div class="resumo-box" id="leituraBox" style="border-left-color: var(--cyan);">
+          <div class="t">🧠 Leitura do mentor</div>
+          <div id="leituraTexto">—</div>
         </div>
 
         <div class="resumo-box">
@@ -457,7 +476,7 @@ body {
     </div>
   </div>
   <div class="footer">
-    <div class="m2-ver">FALA DIREITO! · FASE 1 · v0.34</div>
+    <div class="m2-ver">FALA DIREITO! · FASE 1 · v0.35</div>
     <div class="m2-assinatura">
     <div class="m2-sig">
       <svg width="26" height="26" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="M2Labs"><circle cx="100" cy="100" r="92" fill="#F1E5D2" stroke="#E1CFB2" stroke-width="3"/><circle cx="71" cy="60" r="20" fill="#7E5230"/><circle cx="129" cy="60" r="20" fill="#7E5230"/><circle cx="71" cy="63" r="9" fill="#BC8E60"/><circle cx="129" cy="63" r="9" fill="#BC8E60"/><ellipse cx="100" cy="98" rx="64" ry="58" fill="#9A6638"/><path d="M47 70 Q100 35 153 70" fill="none" stroke="#85562D" stroke-width="4" stroke-linecap="round" opacity="0.5"/><ellipse cx="100" cy="128" rx="44" ry="33" fill="#CFA274"/><circle cx="76" cy="82" r="9" fill="#2B1C10"/><circle cx="124" cy="82" r="9" fill="#2B1C10"/><circle cx="79" cy="79" r="2.6" fill="#FFFFFF"/><circle cx="127" cy="79" r="2.6" fill="#FFFFFF"/><ellipse cx="100" cy="110" rx="13" ry="9" fill="#3A2415"/><rect x="91" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><rect x="101" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><line x1="64" y1="124" x2="32" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="64" y1="132" x2="33" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="124" x2="168" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="132" x2="167" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/></svg>
@@ -501,6 +520,7 @@ function mostrarTela(nome) {
   el("tela-resultado").classList.toggle("hidden", nome !== "resultado");
   el("tela-historico").classList.toggle("hidden", nome !== "historico");
   el("tela-revisao").classList.toggle("hidden", nome !== "revisao");
+  el("tela-regras").classList.toggle("hidden", nome !== "regras");
 }
 
 function fmt(s) {
@@ -639,6 +659,8 @@ function renderResultado(d) {
   el("kpiErros").textContent = placar.erros ?? 0;
   el("kpiRegras").textContent = placar.regras_avaliadas ?? 0;
   el("resumoTexto").textContent = d.resumo || "—";
+  if (d.leitura) { el("leituraTexto").textContent = d.leitura; el("leituraBox").classList.remove("hidden"); }
+  else { el("leituraBox").classList.add("hidden"); }
 
   const mWrap = el("metricas");
   mWrap.innerHTML = "";
@@ -953,6 +975,11 @@ async function rodarAnaliseReal() {
 }
 el("btnRevisar").addEventListener("click", () => garantirTranscricao(() => { construirTurnsArr(); renderRevisao(); mostrarTela("revisao"); }));
 el("btnRevOk").addEventListener("click", () => mostrarTela("contexto"));
+function renderRegras() {
+  el("regrasLista").innerHTML = Object.entries(REGRAS).map(([k, v]) => `<div class="regra-item"><span class="cod">${k}</span><div class="txt">${v}</div></div>`).join("");
+}
+el("btnRegras").addEventListener("click", () => { renderRegras(); mostrarTela("regras"); });
+el("btnRegrasVoltar").addEventListener("click", () => mostrarTela("gravador"));
 function setPessoas(n) { numPessoas = Math.max(1, Math.min(8, n)); el("pNum").textContent = numPessoas; convoWords = []; }
 el("pMenos").addEventListener("click", () => setPessoas(numPessoas - 1));
 el("pMais").addEventListener("click", () => setPessoas(numPessoas + 1));
