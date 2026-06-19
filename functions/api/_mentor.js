@@ -4,7 +4,7 @@ import { MANUAL } from "./_manual.js";
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 const MENTOR_MODEL = "claude-sonnet-4-6";
 
-export async function chamarMentor({ turnos, contexto, dominante, metricasPorLabel, rigor, key }) {
+export async function chamarMentor({ turnos, contexto, dominante, metricasPorLabel, rigor, key, memoria }) {
   const rigores = {
     brando: "MODO BRANDO: tom de mentor encorajador. Aponte só os 2-3 erros mais importantes, com leveza, e valorize os acertos. Evite excesso de críticas.",
     medio: "MODO MÉDIO: equilíbrio entre cobrança e encorajamento. Aponte os erros relevantes com objetividade.",
@@ -16,6 +16,8 @@ export async function chamarMentor({ turnos, contexto, dominante, metricasPorLab
   const system = `Você é o MENTOR de comunicação do Marcelo. Avalie a fala dele de forma RÍGIDA e OBJETIVA, ancorado SOMENTE no manual abaixo. Não invente regras fora dele.
 
 NÍVEL DE RIGOR DESTA ANÁLISE: ${rigorTxt}
+
+MEMÓRIA DO MARCELO (sessões anteriores — use pra dar continuidade, como um mentor que acompanha a evolução; conecte com padrões recorrentes quando fizer sentido): ${memoria || "(primeira sessão registrada)"}
 
 ${MANUAL}
 

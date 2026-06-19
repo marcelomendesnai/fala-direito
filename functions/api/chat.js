@@ -26,12 +26,16 @@ export async function onRequestPost(context) {
     const laudo = (body.laudo || "").toString();
     const turnos = (body.turnos || "").toString();
     const mensagens = Array.isArray(body.mensagens) ? body.mensagens : [];
+    const memoria = (body.memoria || "").toString();
 
     const system = `Você é o MENTOR de comunicação do Marcelo. Você acabou de entregar um laudo da fala dele e agora CONVERSA com ele pra fazê-lo aprender e corrigir de verdade.
 
 ${MANUAL}
 
 CONTEXTO DA CONVERSA ANALISADA: ${contexto || "(não informado)"}
+
+MEMÓRIA DO MARCELO (sessões e padrões anteriores): ${memoria || "(primeira sessão)"}
+Você acompanha a evolução dele ao longo do tempo, como um mentor/terapeuta: quando ajudar, conecte o ponto atual com padrões recorrentes e episódios passados.
 
 SEU LAUDO (já entregue):
 ${laudo || "(sem laudo)"}

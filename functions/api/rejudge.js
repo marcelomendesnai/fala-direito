@@ -24,9 +24,10 @@ export async function onRequestPost(context) {
     const dominante = body.dominante || "A";
     const contexto = (body.contexto || "").toString().trim();
     const rigor = (body.rigor || "medio").toString();
+    const memoria = (body.memoria || "").toString();
     if (!turnos) return json({ erro: "Sem transcrição para reanalisar." }, 400);
 
-    const veredicto = await chamarMentor({ turnos, contexto, dominante, metricasPorLabel, rigor, key: anthropicKey });
+    const veredicto = await chamarMentor({ turnos, contexto, dominante, metricasPorLabel, rigor, key: anthropicKey, memoria });
     let locutor = (veredicto.locutor || "").trim();
     if (!metricasPorLabel[locutor]) locutor = dominante;
 
