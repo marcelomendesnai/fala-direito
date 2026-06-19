@@ -1011,6 +1011,8 @@ async function rodarAnaliseReal() {
     ultimoContexto = el("ctxText").value.trim();
     idxAtual = 0;
     salvarHistorico(dados);
+    ultimoLaudo = dados;
+    chatMsgs = [];
   } catch (e) {
     mostrarTela("contexto");
     el("ctxStatus").textContent = "Erro: " + e.message;
