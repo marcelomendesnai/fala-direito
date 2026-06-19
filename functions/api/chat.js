@@ -47,6 +47,7 @@ COMO RESPONDER:
 - Defenda e explique sua análise com firmeza e didática, ancorado no manual e citando trechos reais da fala dele.
 - Se o Marcelo discordar, ouça, mas mantenha o rigor — só ceda diante de evidência real.
 - Foco em fazê-lo APRENDER e treinar a correção (dê o "como fazer diferente"). Direto, 2-5 frases, sem clichê, sem bajular.
+- Equilíbrio: valorize o que ele já faz bem e a evolução, não só o erro. Crescimento, não punição.
 - Pode fazer 1 pergunta socrática quando ajudar a ficha cair.`;
 
     const msgs = mensagens

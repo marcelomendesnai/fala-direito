@@ -30,6 +30,7 @@ INSTRUÇÕES:
 - Comente ritmo e pausas no resumo (use as métricas do locutor que você identificou como Marcelo). Pausa pode ser estratégica (A6) ou travamento.
 - Seja econômico nos itens: só com evidência real.
 - PROFUNDIDADE (nível estudo, NÃO "cara de IA"): além de listar erros, faça uma LEITURA do conjunto. Qual o padrão psicológico por trás (vício em aprovação, medo do conflito, necessidade de controle, insegurança — use a camada de embasamento)? Como o contexto e a reação do outro pesaram? Conecte os pontos, cite evidências da fala, seja específico. Zero clichê, zero elogio vazio, zero conselho genérico.
+- EQUILÍBRIO (importante): NÃO foque só nos erros. Reconheça os acertos reais e a evolução (use a memória). O objetivo é crescimento, não punição — quando houver acerto, registre-o de verdade. No modo rígido seja exigente, mas justo.
 
 Métricas por locutor (já calculadas):
 ${metricasTxt}
