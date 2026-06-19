@@ -327,7 +327,16 @@ body {
 @keyframes splashOut { to { opacity: 0; visibility: hidden; } }
 .regra-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 10px 14px; margin-bottom: 8px; }
 .regra-item .cod { font-family: var(--font-display); font-weight: 600; color: #c3b6ff; font-size: 8pt; }
+.regra-item { cursor: pointer; }
 .regra-item .txt { font-size: 8.5pt; color: var(--text); margin-top: 3px; line-height: 1.5; }
+.regra-det { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 8.5pt; color: var(--text-soft); line-height: 1.55; }
+.chat-msgs { display: flex; flex-direction: column; gap: 8px; max-height: 52vh; overflow-y: auto; margin-bottom: 12px; }
+.chat-msg { max-width: 86%; padding: 9px 12px; border-radius: 12px; font-size: 8.5pt; line-height: 1.5; white-space: pre-wrap; }
+.chat-msg.user { align-self: flex-end; background: var(--grad); color: #0a0e17; }
+.chat-msg.bot { align-self: flex-start; background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+.chat-row { display: flex; gap: 8px; align-items: center; }
+.chat-in { flex: 1; padding: 11px 14px; border-radius: var(--r-md); border: 1px solid var(--border); background: rgba(0,0,0,0.3); color: var(--text); font-family: var(--font-body); font-size: 10pt; outline: none; }
+.chat-in:focus { border-color: var(--violet); }
 .hidden { display: none !important; }
 
 @media (min-width: 768px) {
@@ -427,6 +436,16 @@ body {
         <div class="acoes"><button class="btn-sec" id="btnRegrasVoltar">Voltar</button></div>
       </div>
 
+      <div id="tela-chat" class="hidden">
+        <div class="ctx-titulo">Conversar com o mentor</div>
+        <div id="chatMsgs" class="chat-msgs"></div>
+        <div class="chat-row">
+          <input id="chatInput" class="chat-in" placeholder="Pergunte ou conteste a análise…">
+          <button id="chatSend" class="btn-sec">Enviar</button>
+        </div>
+        <div class="acoes"><button class="btn-ghost" id="btnChatVoltar">Voltar ao laudo</button></div>
+      </div>
+
       <div id="tela-processando" class="processando hidden">
         <div class="spinner"></div>
         <div class="passo" id="procPasso">Enviando áudio…</div>
@@ -457,6 +476,7 @@ body {
 
         <div class="acoes">
           <button class="btn-sec" id="btnNova">Nova gravação</button>
+          <div style="margin-top:10px;"><button class="btn-ghost" id="btnChat">💬 Conversar com o mentor</button></div>
           <div style="margin-top:10px;"><button class="btn-ghost" id="btnCorrigir">✏️ Corrigir contexto e reanalisar</button></div>
           <div style="margin-top:10px;"><button class="btn-ghost" id="btnHist2">📈 Ver evolução</button></div>
         </div>
@@ -476,7 +496,7 @@ body {
     </div>
   </div>
   <div class="footer">
-    <div class="m2-ver">FALA DIREITO! · FASE 1 · v0.35</div>
+    <div class="m2-ver">FALA DIREITO! · FASE 1 · v0.36</div>
     <div class="m2-assinatura">
     <div class="m2-sig">
       <svg width="26" height="26" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="M2Labs"><circle cx="100" cy="100" r="92" fill="#F1E5D2" stroke="#E1CFB2" stroke-width="3"/><circle cx="71" cy="60" r="20" fill="#7E5230"/><circle cx="129" cy="60" r="20" fill="#7E5230"/><circle cx="71" cy="63" r="9" fill="#BC8E60"/><circle cx="129" cy="63" r="9" fill="#BC8E60"/><ellipse cx="100" cy="98" rx="64" ry="58" fill="#9A6638"/><path d="M47 70 Q100 35 153 70" fill="none" stroke="#85562D" stroke-width="4" stroke-linecap="round" opacity="0.5"/><ellipse cx="100" cy="128" rx="44" ry="33" fill="#CFA274"/><circle cx="76" cy="82" r="9" fill="#2B1C10"/><circle cx="124" cy="82" r="9" fill="#2B1C10"/><circle cx="79" cy="79" r="2.6" fill="#FFFFFF"/><circle cx="127" cy="79" r="2.6" fill="#FFFFFF"/><ellipse cx="100" cy="110" rx="13" ry="9" fill="#3A2415"/><rect x="91" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><rect x="101" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><line x1="64" y1="124" x2="32" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="64" y1="132" x2="33" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="124" x2="168" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="132" x2="167" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/></svg>
@@ -508,6 +528,8 @@ let idxAtual = 0;
 let convoWords = [];
 let turnsArr = [];
 let identidades = [];
+let ultimoLaudo = null;
+let chatMsgs = [];
 let numPessoas = 2;
 
 const el = (id) => document.getElementById(id);
@@ -521,6 +543,7 @@ function mostrarTela(nome) {
   el("tela-historico").classList.toggle("hidden", nome !== "historico");
   el("tela-revisao").classList.toggle("hidden", nome !== "revisao");
   el("tela-regras").classList.toggle("hidden", nome !== "regras");
+  el("tela-chat").classList.toggle("hidden", nome !== "chat");
 }
 
 function fmt(s) {
@@ -643,6 +666,22 @@ const REGRAS = {
   A12: "Muletas de linguagem ('né', 'tipo', 'então', 'aí', 'sabe').",
   A13: "Interromper vs interjetar — deixe o outro terminar.",
   A14: "Linguagem de convicção — verbos firmes ('eu vou', 'decidi') no lugar de hesitantes ('acho', 'espero', 'talvez', 'queria').",
+};
+const REGRA_TREINO = {
+  A1: "Você repete a ideia em vários ângulos pra se sentir entendido. Treino: diga o ponto UMA vez e cale. Quem precisar, pergunta. Conte até 3 antes de emendar qualquer 'porque'.",
+  A2: "Fechar com 'faz sentido?' devolve o poder pro outro. Treino: termine com ponto final e silêncio. Quem convence é o conteúdo, não a busca por aval.",
+  A3: "Sob alfinetada você se defende e perde terreno. Treino: respire e devolva uma pergunta ('o que te faz dizer isso?') em vez de se explicar.",
+  A4: "'Desculpa incomodar' diz que você é um estorvo. Treino: troque por 'tenho uma pergunta' e vá direto. Desculpa só pra erro real.",
+  A5: "Expor seu estado/limite te deixa lido e vulnerável. Treino: separe o privado do público — o que você sente não precisa virar legenda da conversa.",
+  A6: "Você enche o silêncio e acaba negociando contra si. Treino: depois de propor ou perguntar, conte até 7 calado. O silêncio trabalha por você.",
+  A7: "Frases longas viram ruído e a mensagem se perde. Treino: uma ideia por frase, corte adjetivo e enchimento. Se dá pra cortar uma palavra, corte.",
+  A8: "Pedido vago gera retrabalho e perda de autoridade. Treino: sempre o quê + quando + critério ('faça X até sexta, priorizando Y').",
+  A9: "Você enrola antes de chegar no ponto. Treino: 1ª frase = o que você quer/conclui. O contexto vem depois, só se precisar.",
+  A10: "Aceitar no impulso vira arrependimento e ressentimento. Treino: 'deixa eu ver e te respondo' ou pause 3s antes do sim.",
+  A11: "Recusa cheia de justificativa soa culpada e abre brecha. Treino: 3 frases secas. 'Não consigo assumir isso agora.' Ponto.",
+  A12: "'né, tipo, então, aí' viciam e enfraquecem a fala. Treino: troque a muleta por uma micro-pausa. Silêncio é melhor que muleta.",
+  A13: "Cortar antes do outro terminar sinaliza ansiedade. Treino: deixe a última palavra dele 'cair' antes de falar; use 'quando você disse X...'.",
+  A14: "'Eu acho/espero/talvez' enfraquece quando você tem certeza. Treino: afirme — 'eu vou', 'eu decidi', 'minha recomendação é'. Tire o condicional do que é firme.",
 };
 
 function zonaRitmo(p) {
@@ -785,6 +824,8 @@ async function analisar() {
     ultimoContexto = el("ctxText").value.trim();
     idxAtual = 0;
     salvarHistorico(dados);
+    ultimoLaudo = dados;
+    chatMsgs = [];
   } catch (e) {
     mostrarTela("contexto");
     el("ctxStatus").textContent = "Erro: " + e.message;
@@ -857,6 +898,8 @@ async function reanalisar() {
     ultimaSessao = dados._sessao || ultimaSessao;
     ultimoContexto = el("ctxText").value.trim();
     substituirHistorico(idxAtual, dados);
+    ultimoLaudo = dados;
+    chatMsgs = [];
     modoRejulgar = false;
     el("btnAnalisar").textContent = "Analisar";
   } catch (e) {
@@ -976,10 +1019,49 @@ async function rodarAnaliseReal() {
 el("btnRevisar").addEventListener("click", () => garantirTranscricao(() => { construirTurnsArr(); renderRevisao(); mostrarTela("revisao"); }));
 el("btnRevOk").addEventListener("click", () => mostrarTela("contexto"));
 function renderRegras() {
-  el("regrasLista").innerHTML = Object.entries(REGRAS).map(([k, v]) => `<div class="regra-item"><span class="cod">${k}</span><div class="txt">${v}</div></div>`).join("");
+  el("regrasLista").innerHTML = Object.keys(REGRAS).map((k) => `<div class="regra-item" onclick="toggleRegra('${k}')"><span class="cod">${k} ▾</span><div class="txt">${REGRAS[k]}</div><div class="regra-det hidden" id="det-${k}"><b>Como treinar:</b> ${REGRA_TREINO[k] || ""}</div></div>`).join("");
 }
+function toggleRegra(k) { const d = el("det-" + k); if (d) d.classList.toggle("hidden"); }
 el("btnRegras").addEventListener("click", () => { renderRegras(); mostrarTela("regras"); });
 el("btnRegrasVoltar").addEventListener("click", () => mostrarTela("gravador"));
+
+// ---- conversar com o mentor ----
+function laudoTexto(d) {
+  if (!d) return "";
+  let t = "Resumo: " + (d.resumo || "") + "\nLeitura: " + (d.leitura || "") + "\n";
+  (d.itens || []).forEach((it) => { t += `[${it.regra} ${it.tipo}] ${it.titulo || ""}: "${it.trecho || ""}" — ${it.comentario || ""}\n`; });
+  return t;
+}
+function renderChat() {
+  el("chatMsgs").innerHTML = chatMsgs.map((m) => `<div class="chat-msg ${m.role === "user" ? "user" : "bot"}">${(m.content || "").replace(/</g, "&lt;")}</div>`).join("");
+  el("chatMsgs").scrollTop = el("chatMsgs").scrollHeight;
+}
+async function enviarChat() {
+  const q = el("chatInput").value.trim();
+  if (!q) return;
+  el("chatInput").value = "";
+  chatMsgs.push({ role: "user", content: q });
+  chatMsgs.push({ role: "assistant", content: "…" });
+  renderChat();
+  const i = chatMsgs.length - 1;
+  try {
+    const hist = chatMsgs.slice(0, i);
+    const r = await fetch("/api/chat", { method: "POST", headers: { "x-app-pass": APP_PASS, "content-type": "application/json" }, body: JSON.stringify({ contexto: ultimoContexto, laudo: laudoTexto(ultimoLaudo), turnos: (ultimaSessao && ultimaSessao.turnos) || "", mensagens: hist }) });
+    if (r.status === 401) { sairAcesso("Senha incorreta. Entre de novo."); return; }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error((d && d.erro) ? d.erro : ("HTTP " + r.status));
+    chatMsgs[i] = { role: "assistant", content: d.reply || "(sem resposta)" };
+  } catch (e) { chatMsgs[i] = { role: "assistant", content: "Erro: " + e.message }; }
+  renderChat();
+}
+el("btnChat").addEventListener("click", () => {
+  if (!chatMsgs.length) chatMsgs = [{ role: "assistant", content: "Pode perguntar ou contestar qualquer ponto do laudo. Eu explico e defendo a análise, e te ajudo a treinar a correção." }];
+  renderChat();
+  mostrarTela("chat");
+});
+el("chatSend").addEventListener("click", enviarChat);
+el("chatInput").addEventListener("keydown", (e) => { if (e.key === "Enter") enviarChat(); });
+el("btnChatVoltar").addEventListener("click", () => mostrarTela("resultado"));
 function setPessoas(n) { numPessoas = Math.max(1, Math.min(8, n)); el("pNum").textContent = numPessoas; convoWords = []; }
 el("pMenos").addEventListener("click", () => setPessoas(numPessoas - 1));
 el("pMais").addEventListener("click", () => setPessoas(numPessoas + 1));
@@ -1020,6 +1102,8 @@ function verLaudo(i) {
     ultimaSessao = hist[i]._sessao || null;
     ultimoContexto = "";
     idxAtual = i;
+    ultimoLaudo = hist[i];
+    chatMsgs = [];
     mostrarTela("resultado");
   }
 }
