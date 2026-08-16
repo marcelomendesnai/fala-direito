@@ -96,10 +96,11 @@ Critério de aceitação: uma nova lição deve melhorar de forma concreta a cla
 - Novas conversas passam a ser salvas no banco logo após a análise.
 - Renomear, conversar com o mentor e apagar uma conversa também atualizam o registro central.
 - Banco esperado no Cloudflare: `fala-direito-db`, vinculado ao Pages pela variável `DB`.
+- Criação inicial do D1 corrigida: tabela e índice são enviados como comandos completos e separados, evitando `incomplete input`.
 
 ## Próxima etapa
 
-- Concluir o vínculo D1 `DB` no Cloudflare e abrir a v0.41 no aparelho que contém o histórico antigo para executar a migração.
+- Abrir ou atualizar a v0.41 no aparelho que contém o histórico antigo para executar a migração.
 - Validar o novo laudo com conversas reais e calibrar a diferenciação entre ocorrência, atenção e erro em A12.
 - Validar a leitura desktop na publicação e ajustar o que ficar menos confortável de ler.
 - Usar a primeira fonte real na Biblioteca e revisar manualmente as propostas antes de qualquer mudança no manual.
