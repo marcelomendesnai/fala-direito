@@ -23,7 +23,7 @@ export function getDb(env) {
 }
 
 export async function ensureSchema(db) {
-  await db.exec(`
+  await db.prepare(`
     CREATE TABLE IF NOT EXISTS conversations (
       id TEXT PRIMARY KEY,
       created_at TEXT NOT NULL,
@@ -38,10 +38,13 @@ export async function ensureSchema(db) {
       reanalyzed_at TEXT,
       source TEXT NOT NULL DEFAULT 'app',
       updated_at TEXT NOT NULL
-    );
+    )
+  `).run();
+
+  await db.prepare(`
     CREATE INDEX IF NOT EXISTS idx_conversations_created_at
-      ON conversations(created_at DESC);
-  `);
+      ON conversations(created_at DESC)
+  `).run();
 }
 
 export function rowToHistory(row) {
