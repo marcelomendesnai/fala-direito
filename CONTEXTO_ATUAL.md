@@ -1,7 +1,7 @@
 # Fala Direito! — Contexto Atual
 
 **Atualizado em:** 16/08/2026  
-**Estado publicado de referência:** v0.39
+**Estado no repositório:** v0.40 — aguardando verificação no site publicado
 
 ## Propósito do projeto
 
@@ -79,11 +79,17 @@ Toda sugestão deve ficar como proposta, com fonte, evidência, comparação com
 
 Critério de aceitação: uma nova lição deve melhorar de forma concreta a clareza, a autoridade, a negociação ou o relacionamento, sem descaracterizar o estilo desejado.
 
+## Implementado nesta etapa (v0.40)
+
+- Novo system prompt: análise do macro para o micro, com resultado da mensagem, estrutura, entrega, evidências, padrão e próximo treino.
+- Leitura de padrão condicionada a evidências; não há mais obrigação de psicologizar uma sessão isolada.
+- A14 passa a registrar “eu acho”/“acho que” em posição, pedido ou recomendação própria; A12 passa a contar as muletas para a meta de zero sem transformar automaticamente uma ocorrência isolada em erro grave.
+- Laudo reorganizado e preparado para leitura em computador, com navegação lateral, cartões de visão macro e colunas de evidências/padrão/plano.
+- Biblioteca de Comunicação criada: recebe transcrição, compara com o manual e classifica cada lição como Já temos, Melhorar existente, Nova proposta ou Rejeitar.
+- A Biblioteca mantém uma fila local de revisão. Ela **não** altera o manual automaticamente.
+
 ## Próxima etapa
 
-Antes de codar, definir e aprovar:
-
-- o formato visual completo do novo laudo macro → micro;
-- as condições objetivas para classificar A12 como ocorrência, alerta ou erro;
-- a redação final do novo system prompt;
-- o fluxo de revisão e aprovação da Biblioteca de Comunicação.
+- Validar o novo laudo com conversas reais e calibrar a diferenciação entre ocorrência, atenção e erro em A12.
+- Validar a leitura desktop na publicação e ajustar o que ficar menos confortável de ler.
+- Usar a primeira fonte real na Biblioteca e revisar manualmente as propostas antes de qualquer mudança no manual.

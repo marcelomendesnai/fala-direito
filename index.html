@@ -96,7 +96,7 @@ body {
     var(--bg);
   background-attachment: fixed;
 }
-.wrap { max-width: 600px; margin: 0 auto; }
+.wrap { max-width: 660px; margin: 0 auto; }
 
 .app {
   background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
@@ -344,6 +344,63 @@ body {
 .chat-row { display: flex; gap: 8px; align-items: center; }
 .chat-in { flex: 1; padding: 11px 14px; border-radius: var(--r-md); border: 1px solid var(--border); background: rgba(0,0,0,0.3); color: var(--text); font-family: var(--font-body); font-size: 10pt; outline: none; }
 .chat-in:focus { border-color: var(--violet); }
+
+/* Laudo macro → micro e Biblioteca */
+.desktop-nav { display: none; }
+.resultado-topo { margin-bottom: 18px; }
+.resultado-eyebrow { font-family: var(--font-display); font-size: 7.5pt; text-transform: uppercase; letter-spacing: 1.7px; color: var(--cyan); margin-bottom: 4px; }
+.resultado-titulo { font-family: var(--font-display); font-size: 16pt; line-height: 1.2; margin-bottom: 6px; }
+.macro-grid { display: grid; gap: 10px; margin: 16px 0 18px; }
+.macro-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 14px 15px; }
+.macro-card .macro-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 7px; }
+.macro-card .macro-kicker { font-family: var(--font-display); font-size: 7pt; text-transform: uppercase; letter-spacing: 1.4px; color: var(--text-dim); }
+.macro-card .macro-title { font-family: var(--font-display); font-size: 10pt; color: var(--text); margin-bottom: 4px; }
+.macro-card .macro-text { color: var(--text-soft); font-size: 8.5pt; line-height: 1.55; }
+.macro-card .macro-evidence { color: var(--text-dim); font-style: italic; font-size: 8pt; padding-top: 8px; margin-top: 8px; border-top: 1px solid var(--border); }
+.status { font-family: var(--font-display); font-size: 7pt; font-weight: 700; letter-spacing: .7px; padding: 4px 8px; border-radius: var(--r-pill); white-space: nowrap; }
+.status-good { color: var(--ok); background: var(--ok-bg); border: 1px solid rgba(46,230,166,.3); }
+.status-warn { color: var(--amber); background: var(--amber-bg); border: 1px solid rgba(255,178,77,.3); }
+.status-bad { color: var(--erro); background: var(--erro-bg); border: 1px solid rgba(255,93,115,.3); }
+.status-neutral { color: var(--text-soft); background: var(--surface-2); border: 1px solid var(--border); }
+.resultado-colunas { display: grid; gap: 18px; }
+.contagens { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.contagem { border: 1px solid var(--border); background: var(--surface-2); border-radius: var(--r-pill); padding: 5px 10px; font-family: var(--font-display); font-size: 7.5pt; color: var(--text-soft); }
+.contagem strong { color: var(--amber); }
+.contagem.zero strong { color: var(--ok); }
+.item.atencao::before { background: var(--amber); }
+.pill-atencao { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(255,178,77,.3); }
+.item .impacto { color: var(--amber); font-size: 8pt; margin-top: 7px; }
+.plano-card { background: linear-gradient(135deg, rgba(124,92,255,.14), rgba(34,211,238,.08)); border: 1px solid var(--border-glow); border-radius: var(--r-lg); padding: 15px 16px; }
+.plano-card .plano-foco { font-family: var(--font-display); font-size: 12pt; margin-bottom: 6px; }
+.plano-card .plano-row { font-size: 8.5pt; color: var(--text-soft); margin-top: 7px; }
+.plano-card .plano-row b { color: var(--text); }
+.padrao-evidencias { margin-top: 8px; padding-left: 18px; color: var(--text-soft); font-size: 8.5pt; }
+
+/* Biblioteca: toda decisão é uma proposta, nunca uma alteração automática. */
+.library-form { max-width: 900px; margin: 0 auto; }
+.library-title { width: 100%; margin-bottom: 10px; min-height: 0; }
+.library-source { min-height: 230px; }
+.library-guard { margin: 16px 0; background: rgba(255,178,77,.08); border: 1px solid rgba(255,178,77,.25); border-left: 3px solid var(--amber); border-radius: var(--r-md); padding: 12px 14px; color: var(--text-soft); font-size: 8.5pt; }
+.library-guard b { color: var(--amber); }
+.library-list { display: grid; gap: 10px; margin-top: 16px; }
+.library-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 15px 16px; }
+.library-card .lib-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.library-card .lib-title { font-family: var(--font-display); font-size: 10pt; }
+.library-card .lib-lesson { color: var(--text-soft); font-size: 8.7pt; margin: 7px 0; }
+.library-card .lib-evidence { font-size: 8.3pt; color: var(--text-soft); border-left: 2px solid var(--cyan); padding-left: 10px; margin: 9px 0; font-style: italic; }
+.library-card .lib-meta { color: var(--text-dim); font-size: 8pt; margin-top: 8px; }
+.decision { font-family: var(--font-display); font-size: 7pt; font-weight: 700; letter-spacing: .6px; padding: 4px 8px; border-radius: var(--r-pill); white-space: nowrap; }
+.decision-ja_tem { color: var(--cyan); background: rgba(34,211,238,.12); border: 1px solid rgba(34,211,238,.25); }
+.decision-melhorar_existente { color: var(--amber); background: var(--amber-bg); border: 1px solid rgba(255,178,77,.25); }
+.decision-nova_proposta { color: #c3b6ff; background: rgba(124,92,255,.16); border: 1px solid rgba(124,92,255,.3); }
+.decision-rejeitar { color: var(--text-dim); background: var(--surface-2); border: 1px solid var(--border); }
+.lib-proposta { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px; font-size: 8.5pt; color: var(--text-soft); }
+.lib-fila { margin-top: 10px; }
+.lib-fila .btn-ghost { padding: 7px 12px; font-size: 8pt; }
+.lib-fila-status { font-size: 8pt; color: var(--ok); margin-left: 8px; }
+.library-saved { margin-top: 22px; }
+.library-source-card { cursor: pointer; }
+
 .hidden { display: none !important; }
 
 @media (min-width: 768px) {
@@ -354,6 +411,28 @@ body {
   .timer { font-size: 48pt; }
   .rec-btn { width: 128px; height: 128px; }
 }
+
+@media (min-width: 980px) {
+  body { padding: 34px; }
+  .wrap { max-width: 1240px; }
+  .app { display: grid; grid-template-columns: 252px minmax(0, 1fr); min-height: 720px; }
+  .header { text-align: left; padding: 34px 26px; border-right: 1px solid var(--border); }
+  .header::after { left: auto; right: 0; top: 26px; bottom: 26px; width: 1px; height: auto; background: linear-gradient(180deg, transparent, var(--border-glow), transparent); }
+  .header h1 { font-size: 23pt; }
+  .header p { line-height: 1.55; }
+  .desktop-nav { display: flex; flex-direction: column; gap: 7px; margin-top: 34px; }
+  .desktop-nav button { appearance: none; width: 100%; text-align: left; border: 1px solid transparent; border-radius: var(--r-md); padding: 10px 12px; color: var(--text-soft); background: transparent; font-family: var(--font-display); font-size: 8.5pt; cursor: pointer; }
+  .desktop-nav button:hover, .desktop-nav button.on { color: var(--text); background: var(--surface-2); border-color: var(--border); }
+  .desktop-nav button.on { box-shadow: inset 3px 0 0 var(--cyan); }
+  .body { padding: 34px 38px 40px; min-width: 0; }
+  .recorder { max-width: 650px; margin: 80px auto 0; }
+  .macro-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .resultado-colunas { grid-template-columns: minmax(0, 1.18fr) minmax(300px, .82fr); align-items: start; }
+  #tela-historico, #tela-regras, #tela-biblioteca, #tela-contexto, #tela-revisao, #tela-chat { max-width: 980px; margin: 0 auto; }
+  .library-form { max-width: 980px; }
+  .library-source { min-height: 320px; }
+  .chat-msgs { max-height: 58vh; }
+}
 </style>
 </head>
 <body>
@@ -361,7 +440,7 @@ body {
   <img class="sp-castor" src="m2labs-castor.png" alt="M2Labs" width="108" height="108">
   <div class="sp-word">M<span class="sp-2">2</span>Labs</div>
   <div class="sp-sign">por Marcelo Mendes</div>
-  <div class="sp-app">Fala direito! · v0.35</div>
+  <div class="sp-app">Fala direito! · v0.40</div>
 </div>
 <div class="wrap">
   <div id="gate" class="gate hidden">
@@ -379,6 +458,12 @@ body {
       <span class="tag">Fase 1 · MVP</span>
       <h1>Fala direito<span class="bang">!</span></h1>
       <p>Grave a conversa. O Mentor avalia sua fala contra suas próprias regras.</p>
+      <nav class="desktop-nav" aria-label="Navegação principal">
+        <button type="button" data-tela="gravador">◉ Gravar conversa</button>
+        <button type="button" data-tela="historico">↗ Evolução</button>
+        <button type="button" data-tela="regras">☷ Regras e treino</button>
+        <button type="button" data-tela="biblioteca">▣ Biblioteca</button>
+      </nav>
     </div>
 
     <div class="body">
@@ -404,6 +489,7 @@ body {
         <button id="btnDiscreto" class="discreto-btn">Tela preta (modo discreto)</button>
         <button id="btnHist" class="discreto-btn" style="margin-left:8px;">📈 Evolução</button>
         <button id="btnRegras" class="discreto-btn" style="margin-left:8px;">📜 Regras</button>
+        <button id="btnBiblioteca" class="discreto-btn" style="margin-left:8px;">▣ Biblioteca</button>
         <div class="aviso hidden" id="avisoMic">
           <b>Microfone bloqueado.</b> Libere o acesso ao microfone no navegador. A gravação só funciona no site publicado (HTTPS), não abrindo o arquivo direto.
         </div>
@@ -443,6 +529,21 @@ body {
         <div class="acoes"><button class="btn-sec" id="btnRegrasVoltar">Voltar</button></div>
       </div>
 
+      <div id="tela-biblioteca" class="hidden">
+        <div class="ctx-titulo">Biblioteca de Comunicação</div>
+        <p class="ctx-sub">Cole a transcrição de uma fonte. O Curador extrai lições e compara com o manual, sem alterar nenhuma regra automaticamente.</p>
+        <div class="library-form">
+          <input id="libTitulo" class="ctx-text library-title" maxlength="180" placeholder="Título da fonte (ex.: Vídeo X — comunicação em negociação)" />
+          <textarea id="libTexto" class="ctx-text library-source" placeholder="Cole aqui a transcrição do vídeo, aula, texto ou conversa-modelo que quer avaliar."></textarea>
+          <div class="library-guard"><b>Manual protegido.</b> A Biblioteca apenas classifica e prepara propostas com evidências. Nenhuma sugestão cria, muda ou apaga regra sem sua aprovação consciente.</div>
+          <div class="ctx-acoes"><button id="btnLibAnalisar" class="btn-sec">Analisar material</button></div>
+          <div id="libStatus" class="ctx-status"></div>
+          <div id="libResultado"></div>
+          <div id="libSalvos" class="library-saved"></div>
+        </div>
+        <div class="acoes"><button class="btn-ghost" id="btnBibliotecaVoltar">Voltar</button></div>
+      </div>
+
       <div id="tela-chat" class="hidden">
         <div class="ctx-titulo">Conversar com o mentor</div>
         <div id="chatMsgs" class="chat-msgs"></div>
@@ -460,26 +561,34 @@ body {
       </div>
 
       <div id="tela-resultado" class="hidden">
+        <div class="resultado-topo">
+          <div class="resultado-eyebrow">Laudo da conversa</div>
+          <div class="resultado-titulo" id="resultadoTitulo">Visão geral</div>
+          <div id="resumoTexto" class="ctx-sub" style="text-align:left; margin:0;">—</div>
+        </div>
+
         <div class="placar">
           <div class="kpi ok"><div class="num" id="kpiAcertos">0</div><div class="lbl">Acertos</div></div>
           <div class="kpi erro"><div class="num" id="kpiErros">0</div><div class="lbl">Erros</div></div>
           <div class="kpi neutro"><div class="num" id="kpiRegras">0</div><div class="lbl">Regras</div></div>
         </div>
 
-        <div class="resumo-box" id="leituraBox" style="border-left-color: var(--cyan);">
-          <div class="t">🧠 Leitura do mentor</div>
-          <div id="leituraTexto">—</div>
-        </div>
-
-        <div class="resumo-box">
-          <div class="t">Resumo</div>
-          <div id="resumoTexto">—</div>
-        </div>
+        <div class="sec-h">1. Visão macro</div>
+        <div class="macro-grid" id="blocoMacro"></div>
 
         <div class="metricas" id="metricas"></div>
+        <div id="blocoContagens"></div>
 
-        <div id="blocoItens"></div>
-        <div id="blocoReflexoes"></div>
+        <div class="resultado-colunas">
+          <div>
+            <div id="blocoItens"></div>
+            <div id="blocoReflexoes"></div>
+          </div>
+          <div>
+            <div id="blocoPadrao"></div>
+            <div id="blocoPlano"></div>
+          </div>
+        </div>
 
         <div class="acoes">
           <button class="btn-sec" id="btnNova">Nova gravação</button>
@@ -503,7 +612,7 @@ body {
     </div>
   </div>
   <div class="footer">
-    <div class="m2-ver">FALA DIREITO! · FASE 1 · v0.39</div>
+    <div class="m2-ver">FALA DIREITO! · FASE 1 · v0.40</div>
     <div class="m2-assinatura">
     <div class="m2-sig">
       <svg width="26" height="26" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="M2Labs"><circle cx="100" cy="100" r="92" fill="#F1E5D2" stroke="#E1CFB2" stroke-width="3"/><circle cx="71" cy="60" r="20" fill="#7E5230"/><circle cx="129" cy="60" r="20" fill="#7E5230"/><circle cx="71" cy="63" r="9" fill="#BC8E60"/><circle cx="129" cy="63" r="9" fill="#BC8E60"/><ellipse cx="100" cy="98" rx="64" ry="58" fill="#9A6638"/><path d="M47 70 Q100 35 153 70" fill="none" stroke="#85562D" stroke-width="4" stroke-linecap="round" opacity="0.5"/><ellipse cx="100" cy="128" rx="44" ry="33" fill="#CFA274"/><circle cx="76" cy="82" r="9" fill="#2B1C10"/><circle cx="124" cy="82" r="9" fill="#2B1C10"/><circle cx="79" cy="79" r="2.6" fill="#FFFFFF"/><circle cx="127" cy="79" r="2.6" fill="#FFFFFF"/><ellipse cx="100" cy="110" rx="13" ry="9" fill="#3A2415"/><rect x="91" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><rect x="101" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><line x1="64" y1="124" x2="32" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="64" y1="132" x2="33" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="124" x2="168" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="132" x2="167" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/></svg>
@@ -551,6 +660,8 @@ function mostrarTela(nome) {
   el("tela-revisao").classList.toggle("hidden", nome !== "revisao");
   el("tela-regras").classList.toggle("hidden", nome !== "regras");
   el("tela-chat").classList.toggle("hidden", nome !== "chat");
+  el("tela-biblioteca").classList.toggle("hidden", nome !== "biblioteca");
+  document.querySelectorAll(".desktop-nav [data-tela]").forEach((b) => b.classList.toggle("on", b.dataset.tela === nome));
 }
 
 function fmt(s) {
@@ -699,60 +810,105 @@ function zonaRitmo(p) {
   return { cls: "zona-ruim", txt: "corrido" };
 }
 
+function esc(v) {
+  return String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function normalizarStatus(status) {
+  const s = String(status || "não avaliável").toLowerCase();
+  if (s === "passou" || s === "boa") return { texto: s === "boa" ? "Boa" : "Passou", cls: "status-good" };
+  if (s === "parcial" || s === "ajustar" || s === "sessão") return { texto: s === "sessão" ? "Nesta sessão" : s === "ajustar" ? "Ajustar" : "Parcial", cls: "status-warn" };
+  if (s === "não passou" || s === "nao passou") return { texto: "Não passou", cls: "status-bad" };
+  if (s === "recorrente") return { texto: "Recorrente", cls: "status-bad" };
+  return { texto: s === "sem padrão" ? "Sem padrão" : "Não avaliável", cls: "status-neutral" };
+}
+function cardMacro(kicker, titulo, status, texto, evidencia) {
+  const s = normalizarStatus(status);
+  return `<section class="macro-card"><div class="macro-top"><span class="macro-kicker">${esc(kicker)}</span><span class="status ${s.cls}">${esc(s.texto)}</span></div><div class="macro-title">${esc(titulo)}</div><div class="macro-text">${esc(texto || "Ainda sem evidência suficiente.")}</div>${evidencia ? `<div class="macro-evidence">“${esc(evidencia)}”</div>` : ""}</section>`;
+}
 function renderResultado(d) {
   const placar = d.placar || {};
-  el("kpiAcertos").textContent = placar.acertos ?? 0;
-  el("kpiErros").textContent = placar.erros ?? 0;
-  el("kpiRegras").textContent = placar.regras_avaliadas ?? 0;
-  el("resumoTexto").textContent = d.resumo || "—";
-  if (d.leitura) { el("leituraTexto").textContent = d.leitura; el("leituraBox").classList.remove("hidden"); }
-  else { el("leituraBox").classList.add("hidden"); }
+  const macro = d.macro || {};
+  const mensagem = macro.mensagem || {};
+  const estrutura = macro.estrutura || {};
+  const entrega = macro.entrega || {};
+  const itens = Array.isArray(d.itens) ? d.itens : [];
+
+  el("kpiAcertos").textContent = placar.acertos ?? itens.filter((i) => i.tipo === "acerto").length;
+  el("kpiErros").textContent = placar.erros ?? itens.filter((i) => i.tipo === "erro").length;
+  el("kpiRegras").textContent = placar.regras_avaliadas ?? 14;
+  el("resultadoTitulo").textContent = mensagem.titulo || "Visão geral da conversa";
+  el("resumoTexto").textContent = d.resumo || mensagem.avaliacao || "A análise foi organizada do resultado da mensagem até os hábitos de entrega.";
+
+  el("blocoMacro").innerHTML = [
+    cardMacro("1. Resultado da mensagem", mensagem.titulo || "A mensagem passou?", mensagem.status, mensagem.avaliacao || d.resumo, mensagem.evidencia),
+    cardMacro("2. Estrutura", "A ordem ajudou?", estrutura.status, estrutura.avaliacao, estrutura.evidencia),
+    cardMacro("3. Entrega", "Como a fala chegou", entrega.status, entrega.avaliacao, ""),
+  ].join("");
 
   const mWrap = el("metricas");
   mWrap.innerHTML = "";
   if (d.voce) {
     const via = d.voce.como === "marcador" ? "" : " (auto)";
-    mWrap.innerHTML += `<span class="m">🎙️ você = ${d.voce.locutor}${via}</span>`;
+    mWrap.innerHTML += `<span class="m">🎙️ você = ${esc(d.voce.locutor)}${via}</span>`;
   }
   if (d.metricas) {
     const m = d.metricas;
-    if (m.ritmo_ppm)  mWrap.innerHTML += `<span class="m ${zonaRitmo(m.ritmo_ppm).cls}">🏃 ${m.ritmo_ppm} ppm · ${zonaRitmo(m.ritmo_ppm).txt}</span>`;
-    if (m.pausas)     mWrap.innerHTML += `<span class="m">⏸️ ${m.pausas}</span>`;
-    if (m.hesitacao != null) mWrap.innerHTML += `<span class="m">🤐 ${m.hesitacao} muletas</span>`;
+    if (m.ritmo_ppm) mWrap.innerHTML += `<span class="m ${zonaRitmo(m.ritmo_ppm).cls}">🏃 ${esc(m.ritmo_ppm)} ppm · ${esc(zonaRitmo(m.ritmo_ppm).txt)}</span>`;
+    if (m.pausas) mWrap.innerHTML += `<span class="m">⏸️ ${esc(m.pausas)}</span>`;
   }
 
+  const contagens = d.contagens || {};
+  const mapaMuletas = d.metricas?.muletas || contagens.muletas || {};
+  const paresMuletas = Array.isArray(mapaMuletas)
+    ? mapaMuletas.map((x) => [x.termo, x.quantidade])
+    : Object.entries(mapaMuletas);
+  const muletasAtivas = paresMuletas.filter(([, n]) => Number(n) > 0);
+  const euAcho = Number(d.metricas?.eu_acho ?? contagens.eu_acho ?? 0);
+  const blocoContagens = el("blocoContagens");
+  blocoContagens.innerHTML = '<div class="sec-h">Micro-hábitos — meta: zero</div><div class="contagens">' +
+    (muletasAtivas.length ? muletasAtivas.map(([termo, n]) => `<span class="contagem"><strong>${esc(n)}×</strong> ${esc(termo)}</span>`).join("") : '<span class="contagem zero"><strong>0×</strong> muletas detectadas</span>') +
+    `<span class="contagem ${euAcho === 0 ? "zero" : ""}"><strong>${euAcho}×</strong> “eu acho”</span>` +
+    '</div>';
+
   const bloco = el("blocoItens");
-  bloco.innerHTML = "";
-  const itens = d.itens || [];
-  if (itens.length) {
-    bloco.innerHTML = '<div class="sec-h">Análise ponto a ponto</div>';
+  bloco.innerHTML = '<div class="sec-h">4. Evidências e ajustes</div>';
+  if (!itens.length) {
+    bloco.innerHTML += '<p class="ctx-sub" style="text-align:left;">Nenhum ajuste comprovado foi listado nesta análise.</p>';
+  } else {
     itens.forEach((it) => {
-      const acerto = it.tipo === "acerto";
-      const pill = acerto ? '<span class="pill pill-ok">Acerto</span>' : '<span class="pill pill-erro">Erro</span>';
+      const tipo = String(it.tipo || "atenção").toLowerCase();
+      const acerto = tipo === "acerto";
+      const atencao = tipo === "atenção" || tipo === "atencao";
+      const cls = acerto ? "acerto" : atencao ? "atencao" : "erro";
+      const pill = acerto ? '<span class="pill pill-ok">Acerto</span>' : atencao ? '<span class="pill pill-atencao">Atenção</span>' : '<span class="pill pill-erro">Erro</span>';
       bloco.innerHTML += `
-        <div class="item ${acerto ? "acerto" : "erro"}">
+        <article class="item ${cls}">
           <div class="topo">
-            <span class="pill pill-regra">${it.regra || "—"}</span>
+            <span class="pill pill-regra">${esc(it.regra || "—")}</span>
             ${pill}
-            <span class="titulo">${it.titulo || ""}</span>
+            <span class="titulo">${esc(it.titulo || "Observação")}</span>
           </div>
-          ${REGRAS[it.regra] ? `<div class="regra-txt">📜 ${REGRAS[it.regra]}</div>` : ""}
-          ${it.trecho ? `<div class="trecho">“${it.trecho}”</div>` : ""}
-          ${it.comentario ? `<div class="comentario">${it.comentario}</div>` : ""}
-          ${it.reescrita ? `<div class="reescrita"><b>Melhor assim:</b> ${it.reescrita}</div>` : ""}
-        </div>`;
+          ${REGRAS[it.regra] ? `<div class="regra-txt">📜 ${esc(REGRAS[it.regra])}</div>` : ""}
+          ${it.trecho ? `<div class="trecho">“${esc(it.trecho)}”</div>` : ""}
+          ${it.impacto ? `<div class="impacto"><b>Impacto:</b> ${esc(it.impacto)}</div>` : ""}
+          ${it.comentario ? `<div class="comentario">${esc(it.comentario)}</div>` : ""}
+          ${it.reescrita ? `<div class="reescrita"><b>Melhor assim:</b> ${esc(it.reescrita)}</div>` : ""}
+        </article>`;
     });
   }
 
   const refBloco = el("blocoReflexoes");
-  refBloco.innerHTML = "";
-  const refs = d.reflexoes || [];
-  if (refs.length) {
-    refBloco.innerHTML = '<div class="sec-h">Reflexão</div>';
-    refs.forEach((r) => {
-      refBloco.innerHTML += `<div class="reflexao"><div class="t">🪞 Auto-observação</div>${r}</div>`;
-    });
-  }
+  const refs = Array.isArray(d.reflexoes) ? d.reflexoes : [];
+  refBloco.innerHTML = refs.length ? '<div class="sec-h">Auto-observação</div>' + refs.map((r) => `<div class="reflexao"><div class="t">🪞 Pergunta para você</div>${esc(r)}</div>`).join("") : "";
+
+  const padrao = d.padrao || {};
+  const padraoNivel = padrao.nivel || "sem padrão";
+  const padraoEvidencias = Array.isArray(padrao.evidencias) ? padrao.evidencias.filter(Boolean) : [];
+  el("blocoPadrao").innerHTML = '<div class="sec-h">5. Leitura de padrão</div>' + cardMacro("Padrão de comunicação", "O que esta conversa sustenta", padraoNivel, padrao.leitura || "Ainda não há evidência suficiente para afirmar um padrão.", "") +
+    (padraoEvidencias.length ? `<ul class="padrao-evidencias">${padraoEvidencias.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : "");
+
+  const plano = d.plano || {};
+  el("blocoPlano").innerHTML = plano.foco ? `<div class="sec-h">Próximo treino</div><section class="plano-card"><div class="plano-foco">${esc(plano.foco)}</div>${plano.por_que ? `<div class="plano-row"><b>Por quê:</b> ${esc(plano.por_que)}</div>` : ""}${plano.acao ? `<div class="plano-row"><b>Faça:</b> ${esc(plano.acao)}</div>` : ""}${plano.meta ? `<div class="plano-row"><b>Meta:</b> ${esc(plano.meta)}</div>` : ""}</section>` : "";
 }
 
 // ---- trava de acesso por senha ----
@@ -820,6 +976,7 @@ async function analisar() {
   fd.append("audio", mainBlob, "gravacao.webm");
   fd.append("rigor", RIGOR);
   fd.append("contexto", el("ctxText").value.trim());
+  fd.append("memoria", memoriaMentor());
   try {
     const resp = await fetch(ENDPOINT, { method: "POST", headers: { "x-app-pass": APP_PASS }, body: fd });
     if (resp.status === 401) { sairAcesso("Senha incorreta. Entre de novo."); return; }
@@ -960,9 +1117,16 @@ function calcMetricasJS(words, alvo) {
   }
   const ritmo = talk > 0 ? Math.round(c / (talk / 60)) : 0;
   const txt = " " + sorted.filter((w) => w.spk === alvo).map((w) => w.t).join(" ").toLowerCase() + " ";
-  const muletas = ["né", "tipo", "então", "aí", "sabe", "entendeu", "cara"]; let h = 0;
-  for (const m of muletas) { const re = new RegExp("\\b" + m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "g"); h += (txt.match(re) || []).length; }
-  return { ritmo_ppm: ritmo, pausas: p ? `${p} (maior ${maior.toFixed(1)}s)` : "nenhuma longa", hesitacao: h };
+  const listaMuletas = ["né", "tipo", "então", "aí", "sabe", "entendeu", "cara"]; let h = 0;
+  const muletas = {};
+  for (const m of listaMuletas) {
+    const re = new RegExp("\\b" + m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "g");
+    const n = (txt.match(re) || []).length;
+    muletas[m] = n;
+    h += n;
+  }
+  const eu_acho = (txt.match(/\b(eu\s+acho|acho\s+que)\b/g) || []).length;
+  return { ritmo_ppm: ritmo, pausas: p ? `${p} (maior ${maior.toFixed(1)}s)` : "nenhuma longa", hesitacao: h, muletas, eu_acho };
 }
 const CORES = [
   { bg: "rgba(124,92,255,0.18)", bd: "rgba(124,92,255,0.45)", fg: "#c3b6ff" },
@@ -1048,16 +1212,131 @@ function toggleRegra(k) { const d = el("det-" + k); if (d) d.classList.toggle("h
 el("btnRegras").addEventListener("click", () => { renderRegras(); mostrarTela("regras"); });
 el("btnRegrasVoltar").addEventListener("click", () => mostrarTela("gravador"));
 
+// ---- Biblioteca de Comunicação: curadoria com fila humana, nunca alteração automática ----
+const LIB_KEY = "fd_biblioteca";
+function lerBiblioteca() {
+  try { return JSON.parse(localStorage.getItem(LIB_KEY) || "[]"); } catch (e) { return []; }
+}
+function salvarBiblioteca(lista) {
+  try { localStorage.setItem(LIB_KEY, JSON.stringify(lista.slice(0, 12))); } catch (e) {}
+}
+function nomeDecisao(decisao) {
+  return {
+    ja_tem: "Já temos",
+    melhorar_existente: "Melhorar existente",
+    nova_proposta: "Nova proposta",
+    rejeitar: "Rejeitar",
+  }[decisao] || "Revisar";
+}
+function renderItensBiblioteca(item, indice, origemId) {
+  const decisao = ["ja_tem", "melhorar_existente", "nova_proposta", "rejeitar"].includes(item.decisao) ? item.decisao : "rejeitar";
+  const podeIrParaFila = decisao === "melhorar_existente" || decisao === "nova_proposta";
+  const fila = Array.isArray(item.fila) ? item.fila : [];
+  const naFila = fila.includes(indice);
+  return `<article class="library-card">
+    <div class="lib-top"><div class="lib-title">${esc(item.titulo || "Lição sem título")}</div><span class="decision decision-${decisao}">${esc(nomeDecisao(decisao))}</span></div>
+    <div class="lib-lesson">${esc(item.licao || "—")}</div>
+    ${item.evidencia ? `<div class="lib-evidence">“${esc(item.evidencia)}”</div>` : ""}
+    ${item.regras_relacionadas?.length ? `<div class="lib-meta">Regras relacionadas: ${esc(item.regras_relacionadas.join(", "))}</div>` : ""}
+    ${item.justificativa ? `<div class="lib-meta">${esc(item.justificativa)}</div>` : ""}
+    ${item.proposta ? `<div class="lib-proposta"><b>Proposta para revisão humana:</b> ${esc(item.proposta)}</div>` : ""}
+    ${podeIrParaFila ? `<div class="lib-fila"><button class="btn-ghost" type="button" data-lib-fila="${esc(origemId)}" data-lib-item="${indice}">${naFila ? "Retirar da fila" : "Marcar para revisão"}</button><span class="lib-fila-status">${naFila ? "Na fila — ainda não altera o manual." : ""}</span></div>` : ""}
+  </article>`;
+}
+function renderRevisaoBiblioteca(revisao, origemId, fila = []) {
+  const itens = Array.isArray(revisao?.itens) ? revisao.itens : [];
+  if (!itens.length) return '<p class="ctx-sub" style="text-align:left;">Nenhuma lição suficientemente específica foi extraída desta fonte.</p>';
+  const paraRender = itens.map((it) => Object.assign({}, it, { fila }));
+  return `<div class="sec-h">Decisão por lição</div><div class="library-list">${paraRender.map((it, i) => renderItensBiblioteca(it, i, origemId)).join("")}</div><div class="library-guard"><b>Governança:</b> ${esc(revisao.alerta_governanca || "Nenhuma sugestão altera o manual sem aprovação humana.")}</div>`;
+}
+function renderBiblioteca() {
+  const lista = lerBiblioteca();
+  if (!lista.length) {
+    el("libSalvos").innerHTML = '<div class="sec-h">Fontes revisadas</div><p class="ctx-sub" style="text-align:left;">Ainda não há fontes salvas. Cole uma transcrição acima para começar.</p>';
+    return;
+  }
+  el("libSalvos").innerHTML = '<div class="sec-h">Fontes revisadas</div><div class="library-list">' + lista.map((fonte) => {
+    const dt = new Date(fonte.data).toLocaleDateString("pt-BR");
+    const fila = Array.isArray(fonte.fila) ? fonte.fila : [];
+    return `<section class="library-card library-source-card"><div class="lib-top"><div><div class="lib-title">${esc(fonte.titulo || "Material sem título")}</div><div class="lib-meta">Revisado em ${esc(dt)} · ${fonte.revisao?.itens?.length || 0} lições · ${fila.length} na fila</div></div><span class="decision decision-ja_tem">Fonte revisada</span></div><div class="lib-lesson">${esc(fonte.revisao?.resumo || fonte.trecho || "")}</div>${renderRevisaoBiblioteca(fonte.revisao, fonte.id, fila)}</section>`;
+  }).join("") + '</div>';
+}
+function alterarFilaBiblioteca(id, indice) {
+  const lista = lerBiblioteca();
+  const fonte = lista.find((x) => x.id === id);
+  if (!fonte) return;
+  const fila = new Set(Array.isArray(fonte.fila) ? fonte.fila : []);
+  if (fila.has(indice)) fila.delete(indice); else fila.add(indice);
+  fonte.fila = [...fila];
+  salvarBiblioteca(lista);
+  renderBiblioteca();
+}
+async function analisarBiblioteca() {
+  const titulo = el("libTitulo").value.trim() || "Material sem título";
+  const transcricao = el("libTexto").value.trim();
+  if (transcricao.length < 120) { el("libStatus").textContent = "Cole uma transcrição um pouco mais completa para eu encontrar lições reais."; return; }
+  el("libStatus").textContent = "Lendo a fonte e comparando com o manual…";
+  el("btnLibAnalisar").disabled = true;
+  try {
+    const r = await fetch("/api/library-review", {
+      method: "POST",
+      headers: { "x-app-pass": APP_PASS, "content-type": "application/json" },
+      body: JSON.stringify({ titulo, transcricao }),
+    });
+    if (r.status === 401) { sairAcesso("Senha incorreta. Entre de novo."); return; }
+    const revisao = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(revisao.erro || "Não consegui revisar este material.");
+    const fonte = { id: `lib-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, data: new Date().toISOString(), titulo, trecho: transcricao.slice(0, 900), revisao, fila: [] };
+    const lista = lerBiblioteca();
+    lista.unshift(fonte);
+    salvarBiblioteca(lista);
+    el("libResultado").innerHTML = `<div class="sec-h">Revisão atual</div><div class="resumo-box"><div class="t">Resumo da fonte</div>${esc(revisao.resumo || "—")}</div>${renderRevisaoBiblioteca(revisao, fonte.id, [])}`;
+    el("libStatus").textContent = "Revisão salva neste aparelho. O manual continua intacto até sua aprovação consciente.";
+    renderBiblioteca();
+  } catch (e) {
+    el("libStatus").textContent = "Erro: " + e.message;
+  } finally {
+    el("btnLibAnalisar").disabled = false;
+  }
+}
+el("btnBiblioteca").addEventListener("click", () => { renderBiblioteca(); mostrarTela("biblioteca"); });
+el("btnBibliotecaVoltar").addEventListener("click", () => mostrarTela("gravador"));
+el("btnLibAnalisar").addEventListener("click", analisarBiblioteca);
+el("libSalvos").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-lib-fila]");
+  if (b) alterarFilaBiblioteca(b.dataset.libFila, Number(b.dataset.libItem));
+});
+el("libResultado").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-lib-fila]");
+  if (b) alterarFilaBiblioteca(b.dataset.libFila, Number(b.dataset.libItem));
+});
+
+// Navegação lateral para desktop. As ações específicas continuam disponíveis no celular.
+document.querySelectorAll(".desktop-nav [data-tela]").forEach((b) => {
+  b.addEventListener("click", () => {
+    const tela = b.dataset.tela;
+    if (tela === "historico") renderHistorico();
+    if (tela === "regras") renderRegras();
+    if (tela === "biblioteca") renderBiblioteca();
+    mostrarTela(tela);
+  });
+});
+
 // ---- conversar com o mentor ----
 function memoriaMentor() {
   let hist = [];
   try { hist = JSON.parse(localStorage.getItem("fd_hist") || "[]"); } catch (e) {}
   if (!hist.length) return "";
-  const cont = {};
-  hist.forEach((h) => (h.itens || []).filter((i) => i.tipo === "erro").forEach((i) => { cont[i.regra] = (cont[i.regra] || 0) + 1; }));
-  const top = Object.entries(cont).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([r, n]) => `${r} (${n}x)`).join(", ");
-  const recentes = hist.slice(0, 3).map((h) => { const dt = new Date(h.data).toLocaleDateString("pt-BR"); return `- ${h.nome || dt}: ${((h.leitura || h.resumo || "")).slice(0, 240)}`; }).join("\n");
-  return `Sessões registradas: ${hist.length}. Regras que mais quebra: ${top || "—"}.\nLeituras recentes:\n${recentes}`;
+  const sessoes = hist.slice(0, 6).map((h) => {
+    const dt = new Date(h.data).toLocaleDateString("pt-BR");
+    const evidencias = (h.itens || [])
+      .filter((i) => (i.tipo === "erro" || i.tipo === "atenção" || i.tipo === "atencao") && i.regra && i.trecho)
+      .slice(0, 3)
+      .map((i) => `${i.regra}: “${String(i.trecho).slice(0, 160)}”`)
+      .join(" | ");
+    return evidencias ? `- ${h.nome || dt} (${dt}): ${evidencias}` : "";
+  }).filter(Boolean).join("\n");
+  return `HISTÓRICO DE EVIDÊNCIAS (use apenas para confirmar recorrência; não presuma que um erro antigo se repetiu agora):\n${sessoes || "Sem trechos históricos suficientes."}`;
 }
 function salvarChatNoHistorico() {
   try {
@@ -1067,7 +1346,8 @@ function salvarChatNoHistorico() {
 }
 function laudoTexto(d) {
   if (!d) return "";
-  let t = "Resumo: " + (d.resumo || "") + "\nLeitura: " + (d.leitura || "") + "\n";
+  const macro = d.macro || {};
+  let t = "Resumo: " + (d.resumo || "") + "\nResultado: " + ((macro.mensagem && macro.mensagem.avaliacao) || "") + "\nEstrutura: " + ((macro.estrutura && macro.estrutura.avaliacao) || "") + "\nPadrão: " + ((d.padrao && d.padrao.leitura) || "") + "\n";
   (d.itens || []).forEach((it) => { t += `[${it.regra} ${it.tipo}] ${it.titulo || ""}: "${it.trecho || ""}" — ${it.comentario || ""}\n`; });
   return t;
 }

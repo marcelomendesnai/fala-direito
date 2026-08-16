@@ -20,6 +20,7 @@ export async function onRequestPost(context) {
     if (!file) return json({ erro: "Nenhum áudio recebido." }, 400);
     const rigor = (form.get("rigor") || "medio").toString();
     const contexto = (form.get("contexto") || "").toString().trim();
+    const memoria = (form.get("memoria") || "").toString();
 
     const stt = await transcrever(file, elevenKey);
     if (stt.erro) return json({ erro: stt.erro }, stt.status || 502);
@@ -41,7 +42,7 @@ export async function onRequestPost(context) {
 
     const turnos = construirTurnos(words, labelOf);
 
-    const veredicto = await chamarMentor({ turnos, contexto, dominante, metricasPorLabel, rigor, key: anthropicKey });
+    const veredicto = await chamarMentor({ turnos, contexto, dominante, metricasPorLabel, rigor, key: anthropicKey, memoria });
     let locutor = (veredicto.locutor || "").toUpperCase().replace(/[^A-Z]/g, "") || dominante;
     if (!porLabel[locutor]) locutor = dominante;
 
@@ -49,8 +50,12 @@ export async function onRequestPost(context) {
     return json({
       placar: { acertos: itens.filter((i) => i.tipo === "acerto").length, erros: itens.filter((i) => i.tipo === "erro").length, regras_avaliadas: 14 },
       resumo: veredicto.resumo || "—",
+      macro: veredicto.macro || {},
       metricas: metricasPorLabel[locutor] || { ritmo_ppm: 0, pausas: "—", hesitacao: 0 },
       itens,
+      contagens: veredicto.contagens || {},
+      padrao: veredicto.padrao || {},
+      plano: veredicto.plano || {},
       reflexoes: veredicto.reflexoes || [],
       voce: { locutor, como: contexto ? "contexto" : "auto" },
       _sessao: { turnos, metricasPorLabel, dominante },
@@ -104,8 +109,15 @@ function calcMetricas(allWords, alvo, labelOf) {
   const ritmo_ppm = talkSec > 0 ? Math.round(count / (talkSec / 60)) : 0;
   const txt = " " + sorted.filter((w) => labelOf(w) === alvo).map((w) => w.text).join(" ").toLowerCase() + " ";
   let hesitacao = 0;
-  for (const m of MULETAS) { const re = new RegExp("\\b" + m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "g"); hesitacao += (txt.match(re) || []).length; }
-  return { ritmo_ppm, pausas: pausas ? `${pausas} (maior ${maior.toFixed(1)}s)` : "nenhuma longa", hesitacao };
+  const muletas = {};
+  for (const m of MULETAS) {
+    const re = new RegExp("\\b" + m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "g");
+    const n = (txt.match(re) || []).length;
+    muletas[m] = n;
+    hesitacao += n;
+  }
+  const eu_acho = (txt.match(/\b(eu\s+acho|acho\s+que)\b/g) || []).length;
+  return { ritmo_ppm, pausas: pausas ? `${pausas} (maior ${maior.toFixed(1)}s)` : "nenhuma longa", hesitacao, muletas, eu_acho };
 }
 
 function readKey(env, name) {

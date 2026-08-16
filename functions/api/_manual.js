@@ -33,14 +33,14 @@ Base: 6 vídeos do canal "Pense como Forças Especiais" (Ernesto Reis).
 | A4 | Não pedir desculpa demais | "desculpa te incomodar", "desculpa mandar isso", "só queria", "se não for incômodo" | Vai direto, sem pedir licença | "Desculpa te incomodar essa hora, mas..." |
 | A5 | Não revelar demais (oversharing) | Exposição de insegurança/estado: "tô no meu limite", "fim de semana foi horrível" | Mantém o estado interno no privado | Segunda de manhã, conta a todos que está no limite |
 | A6 | Não falar pra tapar silêncio / não negociar contra si | Concessões em sequência sem o outro responder: "posso melhorar o prazo, posso ajustar..." | Faz a proposta e segura o silêncio | Após propor, dá desconto sozinho |
-| A7 | Falar o necessário (sem ruído) | Frases longas demais (> ~20 palavras), redundância, encheção | Frases curtas, uma ideia por frase | Parágrafo de 60 palavras pra dizer "sim" |
+| A7 | Falar o necessário (sem ruído) | Redundância, encheção ou frase longa que atrapalha a mensagem; tamanho sozinho não basta | Uma ideia por frase quando isso aumenta a clareza | Parágrafo de 60 palavras pra dizer "sim" |
 | A8 | Clareza com critério | Pedido vago sem o quê + quando + critério | "Faça X, até sexta, priorizando Y" | "Me apresenta o plano segunda" sem dizer formato |
-| A9 | Começar pela conclusão | 1ª frase é enrolação/contexto longo antes do ponto | A 1ª frase já entrega o ponto | 5 frases de introdução antes de dizer o que quer |
+| A9 | Começar pela conclusão quando couber | Contexto longo ou enrolação antes do ponto, quando esse contexto não era necessário | A 1ª frase já entrega o ponto; contexto vem depois se ajudar | 5 frases de introdução antes de dizer o que quer |
 | A10 | Não dar "sim automático" | "claro", "sem problema", "pode deixar" disparado antes de pensar | Pausa antes de aceitar | Aceita tarefa e se arrepende depois |
 | A11 | Dizer não sem discurso | Recusa longa, cheia de justificativa e desculpa | 3 frases secas: "Não consigo assumir isso agora" | Recusa com 5 linhas de explicação culpada |
-| A12 | Muletas de linguagem | Conta: "né", "tipo", "então", "aí", "sabe?", "entendeu?", "cara" | Fala limpa, sem repetição de muleta | "Tipo, né, então, sabe, aí eu fui" |
+| A12 | Muletas de linguagem | Conta toda ocorrência: "né", "tipo", "então", "aí", "sabe?", "entendeu?", "cara"; uma ocorrência é registro, repetição ou prejuízo à clareza é erro | Fala limpa, meta de zero muletas | "Tipo, né, então, sabe, aí eu fui" |
 | A13 | Interromper vs interjetar | Sobreposição de fala; cortar antes do outro terminar (precisa de 2 vozes) | Deixa terminar; "quando você disse X, o que quis dizer?" | Corta achando que já sabe o que vem |
-| A14 | Linguagem de convicção | Verbos hesitantes: "eu acho", "eu espero", "eu queria", "talvez", "se possível", "meio que"; condicional fraco | Verbos firmes: "eu vou", "eu decidi", afirmação direta | "Eu acho que talvez desse pra gente tentar ver isso" |
+| A14 | Linguagem de convicção | Ao apresentar posição, pedido ou recomendação própria, eliminar "eu acho" e "acho que"; outros termos hesitantes dependem do contexto | Verbos firmes: "eu vou", "eu decidi", afirmação direta | "Eu acho que talvez desse pra gente tentar ver isso" |
 
 Regra de ouro: NÃO invente regra fora deste manual. Se não encaixa em A1–A14, ignora.
 

@@ -35,8 +35,12 @@ export async function onRequestPost(context) {
     return json({
       placar: { acertos: itens.filter((i) => i.tipo === "acerto").length, erros: itens.filter((i) => i.tipo === "erro").length, regras_avaliadas: 14 },
       resumo: veredicto.resumo || "—",
+      macro: veredicto.macro || {},
       metricas: metricasPorLabel[locutor] || { ritmo_ppm: 0, pausas: "—", hesitacao: 0 },
       itens,
+      contagens: veredicto.contagens || {},
+      padrao: veredicto.padrao || {},
+      plano: veredicto.plano || {},
       reflexoes: veredicto.reflexoes || [],
       voce: { locutor, como: contexto ? "contexto" : "auto" },
       _sessao: { turnos, metricasPorLabel, dominante },
