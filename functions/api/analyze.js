@@ -1,6 +1,6 @@
 // /api/analyze — Scribe (transcrição+diarização) -> identifica Marcelo via contexto -> Mentor.
 // Devolve _sessao (turnos + métricas + dominante) p/ permitir reanalisar sem re-transcrever.
-import { chamarMentor } from "./_mentor.js";
+import { chamarMentor, normalizarTituloConversa } from "./_mentor.js";
 
 const STT_URL = "https://api.elevenlabs.io/v1/speech-to-text";
 const STT_MODEL = "scribe_v2";
@@ -48,6 +48,7 @@ export async function onRequestPost(context) {
 
     const itens = veredicto.itens || [];
     return json({
+      nome: normalizarTituloConversa(veredicto.titulo_conversa),
       placar: { acertos: itens.filter((i) => i.tipo === "acerto").length, erros: itens.filter((i) => i.tipo === "erro").length, regras_avaliadas: 14 },
       resumo: veredicto.resumo || "—",
       macro: veredicto.macro || {},

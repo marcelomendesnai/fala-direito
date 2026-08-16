@@ -305,8 +305,10 @@ body {
 .bar.ok { background: var(--ok); }
 .bar.er { background: var(--erro); }
 .hist-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 10px 14px; margin-bottom: 8px; cursor: pointer; }
-.hist-top { display: flex; justify-content: space-between; align-items: center; }
-.hist-data { font-family: var(--font-display); font-size: 8pt; color: var(--text-soft); }
+.hist-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.hist-ident { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+.hist-data { font-family: var(--font-display); font-size: 8pt; color: var(--text-soft); white-space: nowrap; }
+.hist-title { font-family: var(--font-display); font-size: 9pt; font-weight: 650; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hist-meta { font-size: 8pt; color: var(--text-dim); margin-top: 4px; }
 .hist-acoes { display: flex; gap: 10px; margin-top: 8px; }
 .hist-acoes button { background: transparent; border: 1px solid var(--border); color: var(--text-soft); border-radius: var(--r-pill); font-family: var(--font-display); font-size: 7pt; padding: 3px 10px; cursor: pointer; }
@@ -443,7 +445,7 @@ body {
   <img class="sp-castor" src="m2labs-castor.png" alt="M2Labs" width="108" height="108">
   <div class="sp-word">M<span class="sp-2">2</span>Labs</div>
   <div class="sp-sign">por Marcelo Mendes</div>
-  <div class="sp-app">Fala direito! · v0.41</div>
+  <div class="sp-app">Fala direito! · v0.42</div>
 </div>
 <div class="wrap">
   <div id="gate" class="gate hidden">
@@ -616,7 +618,7 @@ body {
     </div>
   </div>
   <div class="footer">
-    <div class="m2-ver">FALA DIREITO! · FASE 1 · v0.41</div>
+    <div class="m2-ver">FALA DIREITO! · FASE 1 · v0.42</div>
     <div class="m2-assinatura">
     <div class="m2-sig">
       <svg width="26" height="26" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="M2Labs"><circle cx="100" cy="100" r="92" fill="#F1E5D2" stroke="#E1CFB2" stroke-width="3"/><circle cx="71" cy="60" r="20" fill="#7E5230"/><circle cx="129" cy="60" r="20" fill="#7E5230"/><circle cx="71" cy="63" r="9" fill="#BC8E60"/><circle cx="129" cy="63" r="9" fill="#BC8E60"/><ellipse cx="100" cy="98" rx="64" ry="58" fill="#9A6638"/><path d="M47 70 Q100 35 153 70" fill="none" stroke="#85562D" stroke-width="4" stroke-linecap="round" opacity="0.5"/><ellipse cx="100" cy="128" rx="44" ry="33" fill="#CFA274"/><circle cx="76" cy="82" r="9" fill="#2B1C10"/><circle cx="124" cy="82" r="9" fill="#2B1C10"/><circle cx="79" cy="79" r="2.6" fill="#FFFFFF"/><circle cx="127" cy="79" r="2.6" fill="#FFFFFF"/><ellipse cx="100" cy="110" rx="13" ry="9" fill="#3A2415"/><rect x="91" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><rect x="101" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><line x1="64" y1="124" x2="32" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="64" y1="132" x2="33" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="124" x2="168" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="132" x2="167" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/></svg>
@@ -651,7 +653,7 @@ let identidades = [];
 let ultimoLaudo = null;
 let chatMsgs = [];
 let numPessoas = 2;
-const ANALYSIS_VERSION = "v0.41";
+const ANALYSIS_VERSION = "v0.42";
 let syncHistoricoRodando = false;
 
 const el = (id) => document.getElementById(id);
@@ -1091,6 +1093,7 @@ function substituirHistorico(idx, d) {
       hist[idx] = Object.assign({}, anterior, d, {
         id: anterior.id || criarIdHistorico(anterior),
         data: anterior.data || new Date().toISOString(),
+        nome: anterior.nome || d.nome || "",
         contexto: ultimoContexto || anterior.contexto || "",
         rigor: RIGOR,
         analysis_version: ANALYSIS_VERSION,
@@ -1546,9 +1549,9 @@ function renderHistorico() {
     const dt = new Date(h.data).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
     const ritmo = (h.metricas && h.metricas.ritmo_ppm) || 0;
     const mul = (h.metricas && h.metricas.hesitacao) || 0;
-    const nome = h.nome || dt;
+    const nome = h.nome || "Título em geração";
     const modelo = h.analysis_version === ANALYSIS_VERSION ? "novo modelo" : "aguardando revisão";
-    return `<div class="hist-card" onclick="verLaudo(${i})"><div class="hist-top"><span class="hist-data">${esc(nome)}</span><span class="m">✅ ${ac(h)} · ⚠️ ${er(h)}</span></div><div class="hist-meta">🏃 ${ritmo} ppm · 🤐 ${mul} muletas · ${modelo} · toque para ver</div><div class="hist-acoes"><button onclick="event.stopPropagation();renomearHist(${i})">✏️ renomear</button><button onclick="event.stopPropagation();apagarHist(${i})">🗑️ apagar</button></div></div>`;
+    return `<div class="hist-card" onclick="verLaudo(${i})"><div class="hist-top"><div class="hist-ident"><span class="hist-data">${esc(dt)}</span><span class="hist-title">${esc(nome)}</span></div><span class="m">✅ ${ac(h)} · ⚠️ ${er(h)}</span></div><div class="hist-meta">🏃 ${ritmo} ppm · 🤐 ${mul} muletas · ${modelo} · toque para ver</div><div class="hist-acoes"><button onclick="event.stopPropagation();renomearHist(${i})">✏️ renomear</button><button onclick="event.stopPropagation();apagarHist(${i})">🗑️ apagar</button></div></div>`;
   }).join("");
 }
 function verLaudo(i) {
@@ -1567,7 +1570,7 @@ function renomearHist(i) {
   const hist = lerHistoricoLocal();
   if (!hist[i]) return;
   const atual = hist[i].nome || new Date(hist[i].data).toLocaleString("pt-BR");
-  const novo = prompt("Nome desta conversa:", atual);
+  const novo = prompt("Título desta conversa (sem nomes):", atual);
   if (novo !== null) {
     hist[i].nome = novo.trim();
     gravarHistoricoLocal(hist);

@@ -1,5 +1,5 @@
 // /api/history-reanalyze — reaplica o mentor atual sobre uma transcrição já salva.
-import { chamarMentor } from "./_mentor.js";
+import { chamarMentor, normalizarTituloConversa } from "./_mentor.js";
 import { ANALYSIS_VERSION, authorize, ensureSchema, getDb, json, readKey, rowToHistory } from "./_history-db.js";
 
 export async function onRequestPost(context) {
@@ -35,6 +35,7 @@ export async function onRequestPost(context) {
     const itens = Array.isArray(veredicto.itens) ? veredicto.itens : [];
     const previous = parse(row.analysis_json, {});
     const analysis = Object.assign({}, previous, {
+      nome: row.name || previous.nome || normalizarTituloConversa(veredicto.titulo_conversa),
       placar: {
         acertos: itens.filter((i) => i.tipo === "acerto").length,
         erros: itens.filter((i) => i.tipo === "erro").length,

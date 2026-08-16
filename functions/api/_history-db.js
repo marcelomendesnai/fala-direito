@@ -1,4 +1,4 @@
-export const ANALYSIS_VERSION = "v0.41";
+export const ANALYSIS_VERSION = "v0.42";
 
 export function readKey(env, name) {
   if (env[name]) return env[name];

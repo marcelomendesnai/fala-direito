@@ -1,5 +1,5 @@
 // /api/rejudge — reanalisa a MESMA conversa com um contexto corrigido (só roda o Mentor).
-import { chamarMentor } from "./_mentor.js";
+import { chamarMentor, normalizarTituloConversa } from "./_mentor.js";
 
 function readKey(env, name) {
   if (env[name]) return env[name];
@@ -33,6 +33,7 @@ export async function onRequestPost(context) {
 
     const itens = veredicto.itens || [];
     return json({
+      nome: normalizarTituloConversa(veredicto.titulo_conversa),
       placar: { acertos: itens.filter((i) => i.tipo === "acerto").length, erros: itens.filter((i) => i.tipo === "erro").length, regras_avaliadas: 14 },
       resumo: veredicto.resumo || "—",
       macro: veredicto.macro || {},

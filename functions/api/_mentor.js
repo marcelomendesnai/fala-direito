@@ -54,12 +54,18 @@ EVIDÊNCIA E PADRÕES
 - Reflexões da Parte B só quando houver gatilho verbal. São perguntas, nunca afirmações sobre o corpo.
 - Reconheça acertos reais com trecho e motivo; não use elogio decorativo.
 
+TÍTULO DA CONVERSA
+- Crie um título de 3 a 8 palavras que resuma somente o assunto ou objetivo principal da conversa.
+- É PROIBIDO usar nomes de pessoas, nomes próprios ou rótulos de locutor no título. Se a conversa mencionar alguém, substitua o nome pelo tema tratado.
+- Antes de responder, confira o título e remova qualquer nome. Exemplos válidos: "Alinhamento sobre prazo da entrega", "Cobrança de retorno pendente", "Definição de responsabilidades".
+
 Métricas por locutor (já calculadas):
 ${metricasTxt}
 
 Responda APENAS com JSON válido, sem markdown, neste formato exato:
 {
   "locutor": "Marcelo",
+  "titulo_conversa": "título curto do assunto, sem qualquer nome",
   "macro": {
     "mensagem": { "status": "passou|parcial|não passou|não avaliável", "titulo": "título curto", "avaliacao": "1-2 frases", "evidencia": "trecho exato ou vazio" },
     "estrutura": { "status": "boa|ajustar|não avaliável", "avaliacao": "1-2 frases", "evidencia": "trecho exato ou vazio" },
@@ -96,4 +102,14 @@ ${turnos}`;
   const ini = texto.indexOf("{"), fim = texto.lastIndexOf("}");
   if (ini >= 0 && fim > ini) { try { return JSON.parse(texto.slice(ini, fim + 1)); } catch (_) {} }
   return { resumo: "Não consegui interpretar o veredicto.", itens: [], reflexoes: [], macro: {}, contagens: {}, padrao: {}, plano: {} };
+}
+
+export function normalizarTituloConversa(value) {
+  const titulo = String(value || "")
+    .replace(/\bMarcelo\b/gi, "")
+    .replace(/\bLocutor\s+[A-Z]\b/gi, "")
+    .replace(/\s+/g, " ")
+    .replace(/^[\s:;,.\-–—]+|[\s:;,.\-–—]+$/g, "")
+    .trim();
+  return (titulo || "Assunto da conversa").slice(0, 90);
 }

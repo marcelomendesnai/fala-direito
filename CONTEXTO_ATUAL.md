@@ -1,7 +1,7 @@
 # Fala Direito! — Contexto Atual
 
 **Atualizado em:** 16/08/2026  
-**Estado no repositório:** v0.41 — banco central e migração do histórico em implementação
+**Estado no repositório:** v0.42 — títulos automáticos no histórico
 
 ## Propósito do projeto
 
@@ -98,9 +98,16 @@ Critério de aceitação: uma nova lição deve melhorar de forma concreta a cla
 - Banco esperado no Cloudflare: `fala-direito-db`, vinculado ao Pages pela variável `DB`.
 - Criação inicial do D1 corrigida: tabela e índice são enviados como comandos completos e separados, evitando `incomplete input`.
 
+## Implementado nesta etapa (v0.42)
+
+- Cada conversa recebe automaticamente um título curto baseado no assunto, sem nomes de pessoas.
+- Data e título aparecem juntos no histórico.
+- O título continua editável pelo botão de renomear.
+- Conversas antigas com transcrição são reavaliadas automaticamente para receber o título.
+
 ## Próxima etapa
 
-- Abrir ou atualizar a v0.41 no aparelho que contém o histórico antigo para executar a migração.
+- Abrir ou atualizar a v0.42 no aparelho que contém o histórico antigo para gerar os títulos.
 - Validar o novo laudo com conversas reais e calibrar a diferenciação entre ocorrência, atenção e erro em A12.
 - Validar a leitura desktop na publicação e ajustar o que ficar menos confortável de ler.
 - Usar a primeira fonte real na Biblioteca e revisar manualmente as propostas antes de qualquer mudança no manual.
