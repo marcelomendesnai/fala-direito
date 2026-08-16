@@ -13,6 +13,8 @@ export async function onRequestGet(context) {
     eleven_key_set: !!readKey(env, "ELEVENLABS_API_KEY"),
     anthropic_key_set: !!readKey(env, "ANTHROPIC_API_KEY"),
     app_password_set: !!readKey(env, "APP_PASSWORD"),
+    db_set: !!readKey(env, "DB"),
+    deploy_commit: readKey(env, "CF_PAGES_COMMIT_SHA") || null,
     env_keys,
   }), { headers: { "content-type": "application/json" } });
 }
