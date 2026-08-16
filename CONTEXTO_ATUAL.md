@@ -1,7 +1,7 @@
 # Fala Direito! — Contexto Atual
 
 **Atualizado em:** 16/08/2026  
-**Estado no repositório:** v0.40 — aguardando verificação no site publicado
+**Estado no repositório:** v0.41 — banco central e migração do histórico em implementação
 
 ## Propósito do projeto
 
@@ -88,8 +88,18 @@ Critério de aceitação: uma nova lição deve melhorar de forma concreta a cla
 - Biblioteca de Comunicação criada: recebe transcrição, compara com o manual e classifica cada lição como Já temos, Melhorar existente, Nova proposta ou Rejeitar.
 - A Biblioteca mantém uma fila local de revisão. Ela **não** altera o manual automaticamente.
 
+## Implementado nesta etapa (v0.41)
+
+- Banco central Cloudflare D1 para guardar transcrição, métricas, contexto e laudo completo de cada conversa.
+- Migração automática do histórico já existente no navegador, preservando a cópia local como segurança.
+- Reavaliação automática das transcrições antigas pelo modelo macro → micro atual.
+- Novas conversas passam a ser salvas no banco logo após a análise.
+- Renomear, conversar com o mentor e apagar uma conversa também atualizam o registro central.
+- Banco esperado no Cloudflare: `fala-direito-db`, vinculado ao Pages pela variável `DB`.
+
 ## Próxima etapa
 
+- Concluir o vínculo D1 `DB` no Cloudflare e abrir a v0.41 no aparelho que contém o histórico antigo para executar a migração.
 - Validar o novo laudo com conversas reais e calibrar a diferenciação entre ocorrência, atenção e erro em A12.
 - Validar a leitura desktop na publicação e ajustar o que ficar menos confortável de ler.
 - Usar a primeira fonte real na Biblioteca e revisar manualmente as propostas antes de qualquer mudança no manual.

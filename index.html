@@ -400,6 +400,9 @@ body {
 .lib-fila-status { font-size: 8pt; color: var(--ok); margin-left: 8px; }
 .library-saved { margin-top: 22px; }
 .library-source-card { cursor: pointer; }
+.db-status { margin: 12px auto 0; max-width: 580px; color: var(--text-dim); font-size: 8pt; line-height: 1.45; }
+.db-status.ok { color: var(--ok); }
+.db-status.warn { color: var(--amber); }
 
 .hidden { display: none !important; }
 
@@ -440,7 +443,7 @@ body {
   <img class="sp-castor" src="m2labs-castor.png" alt="M2Labs" width="108" height="108">
   <div class="sp-word">M<span class="sp-2">2</span>Labs</div>
   <div class="sp-sign">por Marcelo Mendes</div>
-  <div class="sp-app">Fala direito! · v0.40</div>
+  <div class="sp-app">Fala direito! · v0.41</div>
 </div>
 <div class="wrap">
   <div id="gate" class="gate hidden">
@@ -490,6 +493,7 @@ body {
         <button id="btnHist" class="discreto-btn" style="margin-left:8px;">📈 Evolução</button>
         <button id="btnRegras" class="discreto-btn" style="margin-left:8px;">📜 Regras</button>
         <button id="btnBiblioteca" class="discreto-btn" style="margin-left:8px;">▣ Biblioteca</button>
+        <div id="dbStatus" class="db-status">Histórico: aguardando conexão com o banco.</div>
         <div class="aviso hidden" id="avisoMic">
           <b>Microfone bloqueado.</b> Libere o acesso ao microfone no navegador. A gravação só funciona no site publicado (HTTPS), não abrindo o arquivo direto.
         </div>
@@ -612,7 +616,7 @@ body {
     </div>
   </div>
   <div class="footer">
-    <div class="m2-ver">FALA DIREITO! · FASE 1 · v0.40</div>
+    <div class="m2-ver">FALA DIREITO! · FASE 1 · v0.41</div>
     <div class="m2-assinatura">
     <div class="m2-sig">
       <svg width="26" height="26" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="M2Labs"><circle cx="100" cy="100" r="92" fill="#F1E5D2" stroke="#E1CFB2" stroke-width="3"/><circle cx="71" cy="60" r="20" fill="#7E5230"/><circle cx="129" cy="60" r="20" fill="#7E5230"/><circle cx="71" cy="63" r="9" fill="#BC8E60"/><circle cx="129" cy="63" r="9" fill="#BC8E60"/><ellipse cx="100" cy="98" rx="64" ry="58" fill="#9A6638"/><path d="M47 70 Q100 35 153 70" fill="none" stroke="#85562D" stroke-width="4" stroke-linecap="round" opacity="0.5"/><ellipse cx="100" cy="128" rx="44" ry="33" fill="#CFA274"/><circle cx="76" cy="82" r="9" fill="#2B1C10"/><circle cx="124" cy="82" r="9" fill="#2B1C10"/><circle cx="79" cy="79" r="2.6" fill="#FFFFFF"/><circle cx="127" cy="79" r="2.6" fill="#FFFFFF"/><ellipse cx="100" cy="110" rx="13" ry="9" fill="#3A2415"/><rect x="91" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><rect x="101" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><line x1="64" y1="124" x2="32" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="64" y1="132" x2="33" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="124" x2="168" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="132" x2="167" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/></svg>
@@ -647,6 +651,8 @@ let identidades = [];
 let ultimoLaudo = null;
 let chatMsgs = [];
 let numPessoas = 2;
+const ANALYSIS_VERSION = "v0.41";
+let syncHistoricoRodando = false;
 
 const el = (id) => document.getElementById(id);
 setTimeout(() => { const sp = document.getElementById("splash"); if (sp) sp.remove(); }, 3300);
@@ -930,7 +936,13 @@ async function tentarEntrar() {
   try {
     const r = await fetch("/api/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ senha: p }) });
     const d = await r.json().catch(() => ({}));
-    if (d.ok) { APP_PASS = p; try { localStorage.setItem("fd_pass", p); } catch (e) {} el("gateErr").classList.add("hidden"); hideGate(); }
+    if (d.ok) {
+      APP_PASS = p;
+      try { localStorage.setItem("fd_pass", p); } catch (e) {}
+      el("gateErr").classList.add("hidden");
+      hideGate();
+      sincronizarHistorico();
+    }
     else { showGate(d.erro || "Senha incorreta."); }
   } catch (e) { showGate("Erro ao validar. Tente de novo."); }
 }
@@ -987,7 +999,7 @@ async function analisar() {
     ultimaSessao = dados._sessao || null;
     ultimoContexto = el("ctxText").value.trim();
     idxAtual = 0;
-    salvarHistorico(dados);
+    salvarHistorico(dados, ultimoContexto);
     ultimoLaudo = dados;
     chatMsgs = [];
   } catch (e) {
@@ -1074,7 +1086,19 @@ async function reanalisar() {
 function substituirHistorico(idx, d) {
   try {
     const hist = JSON.parse(localStorage.getItem("fd_hist") || "[]");
-    if (hist[idx]) { hist[idx] = Object.assign({ data: hist[idx].data || new Date().toISOString() }, d); localStorage.setItem("fd_hist", JSON.stringify(hist)); }
+    if (hist[idx]) {
+      const anterior = hist[idx];
+      hist[idx] = Object.assign({}, anterior, d, {
+        id: anterior.id || criarIdHistorico(anterior),
+        data: anterior.data || new Date().toISOString(),
+        contexto: ultimoContexto || anterior.contexto || "",
+        rigor: RIGOR,
+        analysis_version: ANALYSIS_VERSION,
+      });
+      localStorage.setItem("fd_hist", JSON.stringify(hist));
+      salvarHistoricoRemoto(hist[idx], "app")
+        .catch((e) => setDbStatus("Reanálise salva neste aparelho; banco pendente: " + e.message, "warn"));
+    }
   } catch (e) {}
 }
 
@@ -1181,7 +1205,7 @@ async function rodarAnaliseReal() {
     ultimaSessao = dados._sessao || { turnos, metricasPorLabel, dominante };
     ultimoContexto = el("ctxText").value.trim();
     idxAtual = 0;
-    salvarHistorico(dados);
+    salvarHistorico(dados, ultimoContexto);
     ultimoLaudo = dados;
     chatMsgs = [];
   } catch (e) {
@@ -1341,7 +1365,11 @@ function memoriaMentor() {
 function salvarChatNoHistorico() {
   try {
     const hist = JSON.parse(localStorage.getItem("fd_hist") || "[]");
-    if (hist[idxAtual]) { hist[idxAtual].chat = chatMsgs; localStorage.setItem("fd_hist", JSON.stringify(hist)); }
+    if (hist[idxAtual]) {
+      hist[idxAtual].chat = chatMsgs;
+      localStorage.setItem("fd_hist", JSON.stringify(hist));
+      if (hist[idxAtual].id) atualizarHistoricoRemoto({ id: hist[idxAtual].id, chat: chatMsgs });
+    }
   } catch (e) {}
 }
 function laudoTexto(d) {
@@ -1386,17 +1414,124 @@ function setPessoas(n) { numPessoas = Math.max(1, Math.min(8, n)); el("pNum").te
 el("pMenos").addEventListener("click", () => setPessoas(numPessoas - 1));
 el("pMais").addEventListener("click", () => setPessoas(numPessoas + 1));
 
-// ---- histórico de evolução (carcaça, salvo no aparelho via localStorage) ----
-function salvarHistorico(d) {
+// ---- histórico de evolução: D1 é a fonte central; localStorage é a cópia de segurança ----
+function lerHistoricoLocal() {
   try {
     const hist = JSON.parse(localStorage.getItem("fd_hist") || "[]");
-    hist.unshift(Object.assign({ data: new Date().toISOString() }, d));  // guarda o laudo COMPLETO
-    localStorage.setItem("fd_hist", JSON.stringify(hist.slice(0, 50)));
+    return Array.isArray(hist) ? hist : [];
+  } catch (e) { return []; }
+}
+function gravarHistoricoLocal(hist) {
+  try { localStorage.setItem("fd_hist", JSON.stringify(hist.slice(0, 100))); } catch (e) {}
+}
+function hashHistorico(texto) {
+  let h = 2166136261;
+  for (let i = 0; i < texto.length; i++) { h ^= texto.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0).toString(36);
+}
+function criarIdHistorico(h) {
+  const sessao = h._sessao || {};
+  return "conv-" + hashHistorico(`${h.data || ""}|${sessao.turnos || ""}`);
+}
+function prepararHistorico(h, contexto = "") {
+  const item = Object.assign({}, h);
+  item.data = item.data || new Date().toISOString();
+  item.id = item.id || criarIdHistorico(item);
+  item.contexto = item.contexto || contexto || "";
+  item.rigor = item.rigor || RIGOR;
+  item.analysis_version = item.analysis_version || (item.macro ? "v0.40" : "legado");
+  return item;
+}
+async function salvarHistoricoRemoto(h, origem = "app") {
+  const r = await fetch("/api/history", {
+    method: "POST",
+    headers: { "x-app-pass": APP_PASS, "content-type": "application/json" },
+    body: JSON.stringify({ historico: h, origem }),
+  });
+  if (r.status === 401) { sairAcesso("Senha incorreta. Entre de novo."); throw new Error("Senha incorreta."); }
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.erro || "Não consegui salvar a conversa no banco.");
+  return d;
+}
+async function atualizarHistoricoRemoto(body) {
+  try {
+    await fetch("/api/history", {
+      method: "PATCH",
+      headers: { "x-app-pass": APP_PASS, "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch (e) {}
+}
+async function buscarHistoricoRemoto() {
+  const r = await fetch("/api/history", { headers: { "x-app-pass": APP_PASS } });
+  if (r.status === 401) { sairAcesso("Senha incorreta. Entre de novo."); throw new Error("Senha incorreta."); }
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.erro || "Não consegui consultar o banco.");
+  return Array.isArray(d.historico) ? d.historico : [];
+}
+function setDbStatus(texto, classe = "") {
+  const box = el("dbStatus");
+  if (!box) return;
+  box.textContent = texto;
+  box.className = "db-status " + classe;
+}
+async function sincronizarHistorico() {
+  if (!APP_PASS || syncHistoricoRodando) return;
+  syncHistoricoRodando = true;
+  let locais = lerHistoricoLocal().map((h) => prepararHistorico(h));
+  gravarHistoricoLocal(locais);
+  let enviados = 0, semTranscricao = 0, reavaliados = 0;
+  try {
+    setDbStatus("Enviando histórico antigo para o banco…", "warn");
+    for (const h of locais) {
+      if (!h._sessao?.turnos) { semTranscricao++; continue; }
+      await salvarHistoricoRemoto(h, "migracao_local");
+      enviados++;
+    }
+    let remoto = await buscarHistoricoRemoto();
+    const pendentes = remoto.filter((h) => h.analysis_version !== ANALYSIS_VERSION && h._sessao?.turnos);
+    for (let i = 0; i < pendentes.length; i++) {
+      setDbStatus(`Reavaliando conversas antigas no novo modelo: ${i + 1}/${pendentes.length}…`, "warn");
+      const r = await fetch("/api/history-reanalyze", {
+        method: "POST",
+        headers: { "x-app-pass": APP_PASS, "content-type": "application/json" },
+        body: JSON.stringify({ id: pendentes[i].id }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.erro || "Falha na reavaliação.");
+      reavaliados++;
+    }
+    remoto = await buscarHistoricoRemoto();
+    const idsRemotos = new Set(remoto.map((h) => h.id));
+    const preservados = locais.filter((h) => !idsRemotos.has(h.id));
+    gravarHistoricoLocal(remoto.concat(preservados));
+    renderHistorico();
+    const extra = semTranscricao ? ` ${semTranscricao} registro(s) antigo(s) sem transcrição ficaram apenas neste aparelho.` : "";
+    setDbStatus(`Banco sincronizado: ${remoto.length} conversa(s); ${reavaliados} reavaliada(s).${extra}`, "ok");
+  } catch (e) {
+    setDbStatus("Banco não sincronizado: " + e.message + " A cópia local foi preservada.", "warn");
+  } finally {
+    syncHistoricoRodando = false;
+  }
+}
+function salvarHistorico(d, contexto = "") {
+  try {
+    const hist = lerHistoricoLocal();
+    const item = prepararHistorico(Object.assign({}, d, {
+      data: new Date().toISOString(),
+      contexto,
+      rigor: RIGOR,
+      analysis_version: ANALYSIS_VERSION,
+    }), contexto);
+    hist.unshift(item);
+    gravarHistoricoLocal(hist);
+    salvarHistoricoRemoto(item, "app")
+      .then(() => setDbStatus("Conversa salva no banco.", "ok"))
+      .catch((e) => setDbStatus("Conversa salva neste aparelho; banco pendente: " + e.message, "warn"));
   } catch (e) {}
 }
 function renderHistorico() {
-  let hist = [];
-  try { hist = JSON.parse(localStorage.getItem("fd_hist") || "[]"); } catch (e) {}
+  const hist = lerHistoricoLocal();
   const trend = el("histTrend"), lista = el("histLista");
   if (!hist.length) { trend.innerHTML = ""; lista.innerHTML = '<p class="ctx-sub">Ainda sem análises salvas. Faça uma e ela aparece aqui.</p>'; return; }
   const ac = (h) => (h.placar && h.placar.acertos) || 0;
@@ -1412,16 +1547,16 @@ function renderHistorico() {
     const ritmo = (h.metricas && h.metricas.ritmo_ppm) || 0;
     const mul = (h.metricas && h.metricas.hesitacao) || 0;
     const nome = h.nome || dt;
-    return `<div class="hist-card" onclick="verLaudo(${i})"><div class="hist-top"><span class="hist-data">${nome}</span><span class="m">✅ ${ac(h)} · ⚠️ ${er(h)}</span></div><div class="hist-meta">🏃 ${ritmo} ppm · 🤐 ${mul} muletas · toque para ver</div><div class="hist-acoes"><button onclick="event.stopPropagation();renomearHist(${i})">✏️ renomear</button><button onclick="event.stopPropagation();apagarHist(${i})">🗑️ apagar</button></div></div>`;
+    const modelo = h.analysis_version === ANALYSIS_VERSION ? "novo modelo" : "aguardando revisão";
+    return `<div class="hist-card" onclick="verLaudo(${i})"><div class="hist-top"><span class="hist-data">${esc(nome)}</span><span class="m">✅ ${ac(h)} · ⚠️ ${er(h)}</span></div><div class="hist-meta">🏃 ${ritmo} ppm · 🤐 ${mul} muletas · ${modelo} · toque para ver</div><div class="hist-acoes"><button onclick="event.stopPropagation();renomearHist(${i})">✏️ renomear</button><button onclick="event.stopPropagation();apagarHist(${i})">🗑️ apagar</button></div></div>`;
   }).join("");
 }
 function verLaudo(i) {
-  let hist = [];
-  try { hist = JSON.parse(localStorage.getItem("fd_hist") || "[]"); } catch (e) {}
+  const hist = lerHistoricoLocal();
   if (hist[i]) {
     renderResultado(hist[i]);
     ultimaSessao = hist[i]._sessao || null;
-    ultimoContexto = "";
+    ultimoContexto = hist[i].contexto || "";
     idxAtual = i;
     ultimoLaudo = hist[i];
     chatMsgs = hist[i].chat || [];
@@ -1429,23 +1564,57 @@ function verLaudo(i) {
   }
 }
 function renomearHist(i) {
-  let hist = []; try { hist = JSON.parse(localStorage.getItem("fd_hist") || "[]"); } catch (e) {}
+  const hist = lerHistoricoLocal();
   if (!hist[i]) return;
   const atual = hist[i].nome || new Date(hist[i].data).toLocaleString("pt-BR");
   const novo = prompt("Nome desta conversa:", atual);
-  if (novo !== null) { hist[i].nome = novo.trim(); localStorage.setItem("fd_hist", JSON.stringify(hist)); renderHistorico(); }
+  if (novo !== null) {
+    hist[i].nome = novo.trim();
+    gravarHistoricoLocal(hist);
+    renderHistorico();
+    if (hist[i].id) atualizarHistoricoRemoto({ id: hist[i].id, nome: hist[i].nome });
+  }
 }
-function apagarHist(i) {
+async function apagarHist(i) {
   if (!confirm("Apagar esta conversa? Ela some também da memória do mentor.")) return;
-  let hist = []; try { hist = JSON.parse(localStorage.getItem("fd_hist") || "[]"); } catch (e) {}
+  const hist = lerHistoricoLocal();
+  const removido = hist[i];
+  if (removido?.id) {
+    try {
+      const r = await fetch("/api/history?id=" + encodeURIComponent(removido.id), { method: "DELETE", headers: { "x-app-pass": APP_PASS } });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.erro || "Não consegui apagar do banco.");
+    } catch (e) {
+      setDbStatus("A conversa não foi apagada: " + e.message, "warn");
+      return;
+    }
+  }
   hist.splice(i, 1);
-  localStorage.setItem("fd_hist", JSON.stringify(hist));
+  gravarHistoricoLocal(hist);
   renderHistorico();
+  setDbStatus("Conversa apagada do aparelho e do banco.", "ok");
 }
 el("btnHist").addEventListener("click", () => { renderHistorico(); mostrarTela("historico"); });
 el("btnHist2").addEventListener("click", () => { renderHistorico(); mostrarTela("historico"); });
 el("btnHistVoltar").addEventListener("click", () => mostrarTela("gravador"));
-el("btnHistLimpar").addEventListener("click", () => { if (confirm("Apagar todo o histórico?")) { localStorage.removeItem("fd_hist"); renderHistorico(); } });
+el("btnHistLimpar").addEventListener("click", async () => {
+  if (!confirm("Apagar todo o histórico, inclusive do banco?")) return;
+  const hist = lerHistoricoLocal();
+  try {
+    for (const h of hist) if (h.id) {
+      const r = await fetch("/api/history?id=" + encodeURIComponent(h.id), { method: "DELETE", headers: { "x-app-pass": APP_PASS } });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.erro || "Não consegui apagar todo o histórico do banco.");
+    }
+  } catch (e) {
+    setDbStatus("Limpeza interrompida: " + e.message + " A cópia local foi preservada.", "warn");
+    return;
+  }
+  localStorage.removeItem("fd_hist");
+  renderHistorico();
+  setDbStatus("Histórico apagado do aparelho e do banco.", "ok");
+});
+if (APP_PASS) sincronizarHistorico();
 
 // ---- modo discreto: tela preta + 3 toques pra voltar ----
 let tapCount = 0, tapTimer = null;
