@@ -1,7 +1,7 @@
 # Fala Direito! — Contexto Atual
 
 **Atualizado em:** 16/08/2026  
-**Estado no repositório:** v0.42 — títulos automáticos no histórico
+**Estado no repositório:** v0.43 — sincronização sem reenvio do histórico
 
 ## Propósito do projeto
 
@@ -105,9 +105,17 @@ Critério de aceitação: uma nova lição deve melhorar de forma concreta a cla
 - O título continua editável pelo botão de renomear.
 - Conversas antigas com transcrição são reavaliadas automaticamente para receber o título.
 
+## Implementado nesta etapa (v0.43)
+
+- Ao abrir o app, o histórico remoto é consultado antes de qualquer envio.
+- Conversas que já existem no D1 não são reenviadas.
+- Apenas registros realmente ausentes são enviados.
+- A mensagem final informa quantos já estavam salvos e quantos foram enviados agora.
+- A versão do modelo de análise permanece v0.42, evitando uma nova reavaliação desnecessária.
+
 ## Próxima etapa
 
-- Abrir ou atualizar a v0.42 no aparelho que contém o histórico antigo para gerar os títulos.
+- Abrir ou atualizar a v0.43 e confirmar que conversas já salvas aparecem como `0 enviada(s) agora`.
 - Validar o novo laudo com conversas reais e calibrar a diferenciação entre ocorrência, atenção e erro em A12.
 - Validar a leitura desktop na publicação e ajustar o que ficar menos confortável de ler.
 - Usar a primeira fonte real na Biblioteca e revisar manualmente as propostas antes de qualquer mudança no manual.
