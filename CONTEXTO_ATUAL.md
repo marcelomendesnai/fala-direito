@@ -1,7 +1,7 @@
 # Fala Direito! — Contexto Atual
 
-**Atualizado em:** 16/08/2026  
-**Estado no repositório:** v0.43 — sincronização sem reenvio do histórico
+**Atualizado em:** 22/08/2026
+**Estado no repositório:** v0.44 — sincronização incremental + Preparar e Treinar
 
 ## Propósito do projeto
 
@@ -113,9 +113,25 @@ Critério de aceitação: uma nova lição deve melhorar de forma concreta a cla
 - A mensagem final informa quantos já estavam salvos e quantos foram enviados agora.
 - A versão do modelo de análise permanece v0.42, evitando uma nova reavaliação desnecessária.
 
+## Implementado nesta etapa (v0.44)
+
+- A sincronização consulta um manifesto leve do D1, compara os identificadores e envia somente conversas novas marcadas como pendentes.
+- Se uma conversa pendente já existir no banco, ela é reconhecida como sincronizada e não é reenviada.
+- Alterações remotas são baixadas individualmente; o app não precisa recarregar todo o conteúdo das transcrições em cada abertura.
+- Exclusões viraram marcações permanentes no D1, impedindo que uma cópia antiga em outro aparelho recrie uma conversa apagada.
+- Nova área unificada **Preparar e Treinar**: Marcelo descreve a reunião, recebe uma proposta de abertura, mensagem central, argumentos, pedido, objeções, cuidados e checklist.
+- O plano gerado é editável. Marcelo pode corrigir diretamente o que a IA não sabe, acrescentar informações e pedir uma nova versão sem perder as decisões já aprovadas.
+- Informações ausentes aparecem como pendências; a IA não deve inventar fatos para completar o plano.
+- Cada preparação e cada tentativa de ensaio são salvas no D1 em tabelas próprias.
+- O ensaio usa as regras e as evidências do histórico real para personalizar o treino, mas é avaliado em rota separada e **nunca entra no histórico oficial, nas médias nem na confirmação de padrões recorrentes**.
+- O resultado do ensaio compara a fala com o plano aprovado e mostra aderência por etapa e foco para a próxima tentativa.
+- A versão do modelo de análise oficial continua v0.42. A v0.44 é uma versão do aplicativo e não provoca reavaliação desnecessária das conversas.
+
 ## Próxima etapa
 
-- Abrir ou atualizar a v0.43 e confirmar que conversas já salvas aparecem como `0 enviada(s) agora`.
+- Abrir ou atualizar a v0.44 e confirmar que conversas já salvas aparecem como `0 enviada(s) agora`.
+- Criar uma preparação real, corrigir pelo menos uma informação no plano e executar um ensaio completo.
+- Confirmar no uso publicado que o ensaio aparece apenas na preparação e não altera os gráficos ou contagens da Evolução.
 - Validar o novo laudo com conversas reais e calibrar a diferenciação entre ocorrência, atenção e erro em A12.
 - Validar a leitura desktop na publicação e ajustar o que ficar menos confortável de ler.
 - Usar a primeira fonte real na Biblioteca e revisar manualmente as propostas antes de qualquer mudança no manual.

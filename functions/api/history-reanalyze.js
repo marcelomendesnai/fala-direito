@@ -14,7 +14,7 @@ export async function onRequestPost(context) {
     await ensureSchema(db);
     const body = await request.json();
     const id = String(body.id || "");
-    const row = await db.prepare("SELECT * FROM conversations WHERE id = ?").bind(id).first();
+    const row = await db.prepare("SELECT * FROM conversations WHERE id = ? AND deleted_at IS NULL").bind(id).first();
     if (!row) return json({ erro: "Conversa não encontrada." }, 404);
     if (!row.transcript) return json({ erro: "Esta conversa não possui transcrição para reavaliar." }, 400);
 

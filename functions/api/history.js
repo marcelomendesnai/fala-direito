@@ -9,7 +9,7 @@ export async function onRequest(context) {
 
   try {
     await ensureSchema(db);
-    if (request.method === "GET") return listar(db);
+    if (request.method === "GET") return listar(request, db);
     if (request.method === "POST") return salvar(request, db);
     if (request.method === "PATCH") return atualizar(request, db);
     if (request.method === "DELETE") return apagar(request, db);
@@ -19,8 +19,19 @@ export async function onRequest(context) {
   }
 }
 
-async function listar(db) {
-  const result = await db.prepare("SELECT * FROM conversations ORDER BY created_at DESC LIMIT 100").all();
+async function listar(request, db) {
+  const url = new URL(request.url);
+  if (url.searchParams.get("manifest") === "1") {
+    const result = await db.prepare("SELECT id, updated_at, deleted_at, analysis_version FROM conversations ORDER BY updated_at DESC LIMIT 500").all();
+    return json({ manifesto: result.results || [], analysis_version: ANALYSIS_VERSION });
+  }
+  const ids = (url.searchParams.get("ids") || "").split(",").map((x) => x.trim()).filter(Boolean).slice(0, 100);
+  if (ids.length) {
+    const marks = ids.map(() => "?").join(",");
+    const result = await db.prepare(`SELECT * FROM conversations WHERE deleted_at IS NULL AND id IN (${marks}) ORDER BY created_at DESC`).bind(...ids).all();
+    return json({ historico: (result.results || []).map(rowToHistory), analysis_version: ANALYSIS_VERSION });
+  }
+  const result = await db.prepare("SELECT * FROM conversations WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT 100").all();
   return json({ historico: (result.results || []).map(rowToHistory), analysis_version: ANALYSIS_VERSION });
 }
 
@@ -54,7 +65,8 @@ async function salvar(request, db) {
       analysis_version = excluded.analysis_version,
       reanalyzed_at = excluded.reanalyzed_at,
       source = excluded.source,
-      updated_at = excluded.updated_at`;
+      updated_at = excluded.updated_at,
+      deleted_at = NULL`;
   await db.prepare(`
     INSERT ${source === "migracao_local" ? "OR IGNORE" : ""} INTO conversations
       (id, created_at, name, context, rigor, transcript, metrics_json, dominant,
@@ -72,7 +84,7 @@ async function atualizar(request, db) {
   const id = String(body.id || "");
   if (!id) return json({ erro: "Identificador ausente." }, 400);
   if (Object.hasOwn(body, "nome")) {
-    await db.prepare("UPDATE conversations SET name = ?, updated_at = ? WHERE id = ?")
+    await db.prepare("UPDATE conversations SET name = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL")
       .bind(String(body.nome || "").slice(0, 180), new Date().toISOString(), id).run();
   }
   if (Object.hasOwn(body, "chat")) {
@@ -81,7 +93,7 @@ async function atualizar(request, db) {
       let analysis = {};
       try { analysis = JSON.parse(row.analysis_json || "{}"); } catch (_) {}
       analysis.chat = Array.isArray(body.chat) ? body.chat.slice(-40) : [];
-      await db.prepare("UPDATE conversations SET analysis_json = ?, updated_at = ? WHERE id = ?")
+      await db.prepare("UPDATE conversations SET analysis_json = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL")
         .bind(JSON.stringify(analysis), new Date().toISOString(), id).run();
     }
   }
@@ -92,7 +104,8 @@ async function apagar(request, db) {
   const url = new URL(request.url);
   const id = url.searchParams.get("id") || "";
   if (!id) return json({ erro: "Identificador ausente." }, 400);
-  await db.prepare("DELETE FROM conversations WHERE id = ?").bind(id).run();
+  const now = new Date().toISOString();
+  await db.prepare("UPDATE conversations SET deleted_at = ?, updated_at = ? WHERE id = ?").bind(now, now, id).run();
   return json({ ok: true });
 }
 

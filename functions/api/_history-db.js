@@ -37,9 +37,16 @@ export async function ensureSchema(db) {
       analysis_version TEXT,
       reanalyzed_at TEXT,
       source TEXT NOT NULL DEFAULT 'app',
-      updated_at TEXT NOT NULL
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT
     )
   `).run();
+
+  try {
+    await db.prepare("ALTER TABLE conversations ADD COLUMN deleted_at TEXT").run();
+  } catch (e) {
+    if (!String(e?.message || e).toLowerCase().includes("duplicate column")) throw e;
+  }
 
   await db.prepare(`
     CREATE INDEX IF NOT EXISTS idx_conversations_created_at
@@ -58,6 +65,7 @@ export function rowToHistory(row) {
     rigor: row.rigor || "medio",
     analysis_version: row.analysis_version || "legado",
     reanalyzed_at: row.reanalyzed_at || null,
+    _sync: { state: "synced", updated_at: row.updated_at || null },
     _sessao: {
       turnos: row.transcript,
       metricasPorLabel,

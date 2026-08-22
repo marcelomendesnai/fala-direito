@@ -405,6 +405,23 @@ body {
 .db-status { margin: 12px auto 0; max-width: 580px; color: var(--text-dim); font-size: 8pt; line-height: 1.45; }
 .db-status.ok { color: var(--ok); }
 .db-status.warn { color: var(--amber); }
+.prep-shell { max-width: 980px; margin: 0 auto; }
+.prep-hero { background: linear-gradient(135deg, rgba(124,92,255,.13), rgba(34,211,238,.08)); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 16px; margin-bottom: 16px; }
+.prep-plan { display: grid; gap: 12px; margin-top: 18px; }
+.prep-field { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 14px; }
+.prep-field label { display: block; font-family: var(--font-display); font-size: 7.5pt; color: var(--cyan); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.prep-field textarea, .prep-field input { width: 100%; border: 0; outline: 0; resize: vertical; background: transparent; color: var(--text); font: inherit; line-height: 1.55; min-height: 42px; }
+.prep-field input { min-height: 32px; }
+.prep-two { display: grid; gap: 12px; }
+.prep-objection { background: rgba(0,0,0,.18); border: 1px solid var(--border); border-radius: var(--r-md); padding: 10px 12px; margin-top: 8px; }
+.prep-objection b { color: var(--amber); }
+.prep-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 14px; }
+.prep-saved { display: grid; gap: 8px; margin-top: 12px; }
+.prep-saved button { width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); color: var(--text); padding: 11px 13px; cursor: pointer; }
+.prep-banner { background: rgba(34,211,238,.1); border: 1px solid rgba(34,211,238,.3); border-radius: var(--r-md); padding: 10px 12px; margin-bottom: 14px; color: var(--cyan); font-size: 8.5pt; }
+.practice-compare { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--cyan); border-radius: var(--r-md); padding: 14px 16px; margin: 14px 0 18px; }
+.practice-score { font-family: var(--font-display); color: var(--cyan); font-size: 18pt; font-weight: 700; }
+.practice-step { padding: 8px 0; border-top: 1px solid var(--border); font-size: 8.5pt; color: var(--text-soft); }
 
 .hidden { display: none !important; }
 
@@ -415,6 +432,7 @@ body {
   .body { padding: 30px; }
   .timer { font-size: 48pt; }
   .rec-btn { width: 128px; height: 128px; }
+  .prep-two { grid-template-columns: 1fr 1fr; }
 }
 
 @media (min-width: 980px) {
@@ -433,7 +451,7 @@ body {
   .recorder { max-width: 650px; margin: 80px auto 0; }
   .macro-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .resultado-colunas { grid-template-columns: minmax(0, 1.18fr) minmax(300px, .82fr); align-items: start; }
-  #tela-historico, #tela-regras, #tela-biblioteca, #tela-contexto, #tela-revisao, #tela-chat { max-width: 980px; margin: 0 auto; }
+  #tela-historico, #tela-regras, #tela-biblioteca, #tela-preparar, #tela-contexto, #tela-revisao, #tela-chat { max-width: 980px; margin: 0 auto; }
   .library-form { max-width: 980px; }
   .library-source { min-height: 320px; }
   .chat-msgs { max-height: 58vh; }
@@ -445,7 +463,7 @@ body {
   <img class="sp-castor" src="m2labs-castor.png" alt="M2Labs" width="108" height="108">
   <div class="sp-word">M<span class="sp-2">2</span>Labs</div>
   <div class="sp-sign">por Marcelo Mendes</div>
-  <div class="sp-app">Fala direito! · v0.43</div>
+  <div class="sp-app">Fala direito! · v0.44</div>
 </div>
 <div class="wrap">
   <div id="gate" class="gate hidden">
@@ -465,6 +483,7 @@ body {
       <p>Grave a conversa. O Mentor avalia sua fala contra suas próprias regras.</p>
       <nav class="desktop-nav" aria-label="Navegação principal">
         <button type="button" data-tela="gravador">◉ Gravar conversa</button>
+        <button type="button" data-tela="preparar">◇ Preparar e treinar</button>
         <button type="button" data-tela="historico">↗ Evolução</button>
         <button type="button" data-tela="regras">☷ Regras e treino</button>
         <button type="button" data-tela="biblioteca">▣ Biblioteca</button>
@@ -474,6 +493,7 @@ body {
     <div class="body">
 
       <div id="tela-gravador" class="recorder">
+        <div id="treinoBanner" class="prep-banner hidden">Ensaio ativo. Esta gravação não altera suas médias.</div>
         <div class="timer" id="timer">00:00</div>
         <div class="rec-wrap" id="recWrap">
           <button class="rec-btn" id="btnRec">
@@ -495,6 +515,7 @@ body {
         <button id="btnHist" class="discreto-btn" style="margin-left:8px;">📈 Evolução</button>
         <button id="btnRegras" class="discreto-btn" style="margin-left:8px;">📜 Regras</button>
         <button id="btnBiblioteca" class="discreto-btn" style="margin-left:8px;">▣ Biblioteca</button>
+        <button id="btnPreparar" class="discreto-btn" style="margin-left:8px;">◇ Preparar e treinar</button>
         <div id="dbStatus" class="db-status">Histórico: aguardando conexão com o banco.</div>
         <div class="aviso hidden" id="avisoMic">
           <b>Microfone bloqueado.</b> Libere o acesso ao microfone no navegador. A gravação só funciona no site publicado (HTTPS), não abrindo o arquivo direto.
@@ -550,6 +571,33 @@ body {
         <div class="acoes"><button class="btn-ghost" id="btnBibliotecaVoltar">Voltar</button></div>
       </div>
 
+      <div id="tela-preparar" class="hidden">
+        <div class="ctx-titulo">Preparar e Treinar</div>
+        <p class="ctx-sub">Explique a reunião. O Mentor monta um plano, você corrige o que ele não sabe e só depois começa o ensaio.</p>
+        <div class="prep-shell">
+          <div class="prep-hero">
+            <textarea id="prepBrief" class="ctx-text" placeholder="Ex.: Vou para uma reunião defender a mudança do processo. Preciso explicar o problema, enfrentar a objeção de custo e pedir aprovação até sexta."></textarea>
+            <div class="prep-actions"><button id="btnPrepCriar" class="btn-sec">Criar primeira versão</button></div>
+            <div id="prepStatus" class="ctx-status"></div>
+          </div>
+          <div id="prepEditor" class="hidden">
+            <div id="prepPlano" class="prep-plan"></div>
+            <div class="prep-hero" style="margin-top:14px;">
+              <div class="sec-h" style="margin-top:0;">Peça alterações ou acrescente informações</div>
+              <textarea id="prepAjuste" class="ctx-text" placeholder="Ex.: O diretor já conhece o problema. Tire essa explicação e deixe o pedido mais firme. A principal objeção será o prazo."></textarea>
+              <div class="prep-actions"><button id="btnPrepAjustar" class="btn-ghost">Ajustar plano</button></div>
+            </div>
+            <div class="prep-actions">
+              <button id="btnPrepSalvar" class="btn-ghost">Salvar ajustes</button>
+              <button id="btnPrepTreinar" class="btn-sec">Treinar este plano</button>
+            </div>
+          </div>
+          <div class="sec-h">Preparações salvas</div>
+          <div id="prepSalvas" class="prep-saved"></div>
+        </div>
+        <div class="acoes"><button class="btn-ghost" id="btnPrepVoltar">Voltar</button></div>
+      </div>
+
       <div id="tela-chat" class="hidden">
         <div class="ctx-titulo">Conversar com o mentor</div>
         <div id="chatMsgs" class="chat-msgs"></div>
@@ -567,8 +615,9 @@ body {
       </div>
 
       <div id="tela-resultado" class="hidden">
+        <div id="treinoResultadoAviso" class="prep-banner hidden">Resultado de ensaio: serve para treino e não entra nas médias oficiais.</div>
         <div class="resultado-topo">
-          <div class="resultado-eyebrow">Laudo da conversa</div>
+          <div class="resultado-eyebrow" id="resultadoEyebrow">Laudo da conversa</div>
           <div class="resultado-titulo" id="resultadoTitulo">Visão geral</div>
           <div id="resumoTexto" class="ctx-sub" style="text-align:left; margin:0;">—</div>
         </div>
@@ -581,6 +630,8 @@ body {
 
         <div class="sec-h">1. Visão macro</div>
         <div class="macro-grid" id="blocoMacro"></div>
+
+        <div id="blocoComparacaoTreino"></div>
 
         <div class="metricas" id="metricas"></div>
         <div id="blocoContagens"></div>
@@ -601,6 +652,7 @@ body {
           <div style="margin-top:10px;"><button class="btn-ghost" id="btnChat">💬 Conversar com o mentor</button></div>
           <div style="margin-top:10px;"><button class="btn-ghost" id="btnCorrigir">✏️ Corrigir contexto e reanalisar</button></div>
           <div style="margin-top:10px;"><button class="btn-ghost" id="btnHist2">📈 Ver evolução</button></div>
+          <div id="acaoVoltarPrep" class="hidden" style="margin-top:10px;"><button class="btn-ghost" id="btnVoltarPrep">◇ Voltar ao plano</button></div>
         </div>
       </div>
 
@@ -618,7 +670,7 @@ body {
     </div>
   </div>
   <div class="footer">
-    <div class="m2-ver">FALA DIREITO! · FASE 1 · v0.43</div>
+    <div class="m2-ver">FALA DIREITO! · FASE 1 · v0.44</div>
     <div class="m2-assinatura">
     <div class="m2-sig">
       <svg width="26" height="26" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="M2Labs"><circle cx="100" cy="100" r="92" fill="#F1E5D2" stroke="#E1CFB2" stroke-width="3"/><circle cx="71" cy="60" r="20" fill="#7E5230"/><circle cx="129" cy="60" r="20" fill="#7E5230"/><circle cx="71" cy="63" r="9" fill="#BC8E60"/><circle cx="129" cy="63" r="9" fill="#BC8E60"/><ellipse cx="100" cy="98" rx="64" ry="58" fill="#9A6638"/><path d="M47 70 Q100 35 153 70" fill="none" stroke="#85562D" stroke-width="4" stroke-linecap="round" opacity="0.5"/><ellipse cx="100" cy="128" rx="44" ry="33" fill="#CFA274"/><circle cx="76" cy="82" r="9" fill="#2B1C10"/><circle cx="124" cy="82" r="9" fill="#2B1C10"/><circle cx="79" cy="79" r="2.6" fill="#FFFFFF"/><circle cx="127" cy="79" r="2.6" fill="#FFFFFF"/><ellipse cx="100" cy="110" rx="13" ry="9" fill="#3A2415"/><rect x="91" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><rect x="101" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><line x1="64" y1="124" x2="32" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="64" y1="132" x2="33" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="124" x2="168" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="132" x2="167" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/></svg>
@@ -655,6 +707,8 @@ let chatMsgs = [];
 let numPessoas = 2;
 const ANALYSIS_VERSION = "v0.42";
 let syncHistoricoRodando = false;
+let preparacaoAtiva = null;
+let modoTreino = false;
 
 const el = (id) => document.getElementById(id);
 setTimeout(() => { const sp = document.getElementById("splash"); if (sp) sp.remove(); }, 3300);
@@ -669,6 +723,7 @@ function mostrarTela(nome) {
   el("tela-regras").classList.toggle("hidden", nome !== "regras");
   el("tela-chat").classList.toggle("hidden", nome !== "chat");
   el("tela-biblioteca").classList.toggle("hidden", nome !== "biblioteca");
+  el("tela-preparar").classList.toggle("hidden", nome !== "preparar");
   document.querySelectorAll(".desktop-nav [data-tela]").forEach((b) => b.classList.toggle("on", b.dataset.tela === nome));
 }
 
@@ -840,6 +895,13 @@ function renderResultado(d) {
   const estrutura = macro.estrutura || {};
   const entrega = macro.entrega || {};
   const itens = Array.isArray(d.itens) ? d.itens : [];
+  const treino = d.modo === "treino";
+  el("treinoResultadoAviso").classList.toggle("hidden", !treino);
+  el("acaoVoltarPrep").classList.toggle("hidden", !treino);
+  el("btnChat").classList.toggle("hidden", treino);
+  el("btnCorrigir").classList.toggle("hidden", treino);
+  el("resultadoEyebrow").textContent = treino ? "Avaliação do ensaio" : "Laudo da conversa";
+  el("btnNova").textContent = treino ? "Treinar novamente" : "Nova gravação";
 
   el("kpiAcertos").textContent = placar.acertos ?? itens.filter((i) => i.tipo === "acerto").length;
   el("kpiErros").textContent = placar.erros ?? itens.filter((i) => i.tipo === "erro").length;
@@ -852,6 +914,10 @@ function renderResultado(d) {
     cardMacro("2. Estrutura", "A ordem ajudou?", estrutura.status, estrutura.avaliacao, estrutura.evidencia),
     cardMacro("3. Entrega", "Como a fala chegou", entrega.status, entrega.avaliacao, ""),
   ].join("");
+
+  const comparacao = d.comparacao || {};
+  const etapas = Array.isArray(comparacao.etapas) ? comparacao.etapas : [];
+  el("blocoComparacaoTreino").innerHTML = treino ? `<div class="sec-h">Comparação com o plano aprovado</div><section class="practice-compare"><div class="practice-score">${esc(comparacao.aderencia ?? 0)}% de aderência</div><div style="margin:5px 0 10px;">${esc(comparacao.resumo || "Compare a tentativa com cada etapa do plano.")}</div>${etapas.map((x) => `<div class="practice-step"><b>${esc(x.etapa || "Etapa")} · ${esc(x.status || "")}</b>${x.evidencia ? `<div>“${esc(x.evidencia)}”</div>` : ""}${x.ajuste ? `<div>Próximo ajuste: ${esc(x.ajuste)}</div>` : ""}</div>`).join("")}${comparacao.proxima_tentativa ? `<div class="plano-row" style="margin-top:10px;"><b>Próxima tentativa:</b> ${esc(comparacao.proxima_tentativa)}</div>` : ""}</section>` : "";
 
   const mWrap = el("metricas");
   mWrap.innerHTML = "";
@@ -977,7 +1043,7 @@ function irParaContexto() {
   }
   el("ctxStatus").textContent = "";
   modoRejulgar = false;
-  el("btnAnalisar").textContent = "Rodar análise";
+  el("btnAnalisar").textContent = modoTreino ? "Avaliar ensaio" : "Rodar análise";
   convoWords = [];
   mostrarTela("contexto");
 }
@@ -1051,6 +1117,7 @@ async function transcreverContexto() {
 el("btnDitar").addEventListener("click", ditarToggle);
 el("btnAnalisar").addEventListener("click", () => (modoRejulgar ? reanalisar() : rodarAnalise()));
 el("btnCorrigir").addEventListener("click", () => {
+  if (modoTreino) return;
   if (!ultimaSessao) { el("ctxStatus").textContent = ""; return; }
   modoRejulgar = true;
   el("ctxText").value = ultimoContexto || "";
@@ -1097,9 +1164,11 @@ function substituirHistorico(idx, d) {
         contexto: ultimoContexto || anterior.contexto || "",
         rigor: RIGOR,
         analysis_version: ANALYSIS_VERSION,
+        _sync: { state: "pending", updated_at: anterior._sync?.updated_at || null },
       });
       localStorage.setItem("fd_hist", JSON.stringify(hist));
       salvarHistoricoRemoto(hist[idx], "app")
+        .then((resposta) => { if (resposta.historico) mesclarHistoricoLocal([resposta.historico]); })
         .catch((e) => setDbStatus("Reanálise salva neste aparelho; banco pendente: " + e.message, "warn"));
     }
   } catch (e) {}
@@ -1199,7 +1268,11 @@ async function rodarAnaliseReal() {
   const metricasPorLabel = {}; labels.forEach((L) => { metricasPorLabel[L] = calcMetricasJS(convoWords, L); });
   const dominante = labels.slice().sort((a, b) => convoWords.filter((w) => w.spk === b).length - convoWords.filter((w) => w.spk === a).length)[0];
   try {
-    const resp = await fetch("/api/rejudge", { method: "POST", headers: { "x-app-pass": APP_PASS, "content-type": "application/json" }, body: JSON.stringify({ turnos, metricas: metricasPorLabel, dominante, contexto: el("ctxText").value.trim(), rigor: RIGOR, memoria: memoriaMentor() }) });
+    const endpoint = modoTreino ? "/api/practice-evaluate" : "/api/rejudge";
+    const payload = modoTreino
+      ? { turnos, metricas: metricasPorLabel, dominante, plano: preparacaoAtiva?.plano || {}, memoria: memoriaMentor() }
+      : { turnos, metricas: metricasPorLabel, dominante, contexto: el("ctxText").value.trim(), rigor: RIGOR, memoria: memoriaMentor() };
+    const resp = await fetch(endpoint, { method: "POST", headers: { "x-app-pass": APP_PASS, "content-type": "application/json" }, body: JSON.stringify(payload) });
     if (resp.status === 401) { sairAcesso("Senha incorreta. Entre de novo."); return; }
     const dados = await resp.json().catch(() => ({}));
     if (!resp.ok) throw new Error((dados && dados.erro) ? dados.erro : ("HTTP " + resp.status));
@@ -1207,8 +1280,17 @@ async function rodarAnaliseReal() {
     mostrarTela("resultado");
     ultimaSessao = dados._sessao || { turnos, metricasPorLabel, dominante };
     ultimoContexto = el("ctxText").value.trim();
-    idxAtual = 0;
-    salvarHistorico(dados, ultimoContexto);
+    if (modoTreino) {
+      try {
+        await salvarTentativaTreino(dados, turnos, metricasPorLabel);
+        el("treinoResultadoAviso").textContent = "Resultado de ensaio salvo separadamente. Ele não entra nas médias oficiais.";
+      } catch (e) {
+        el("treinoResultadoAviso").textContent = "O ensaio foi avaliado, mas não foi salvo no banco: " + e.message + " Ele continua fora das médias oficiais.";
+      }
+    } else {
+      idxAtual = 0;
+      salvarHistorico(dados, ultimoContexto);
+    }
     ultimoLaudo = dados;
     chatMsgs = [];
   } catch (e) {
@@ -1238,6 +1320,180 @@ function renderRegras() {
 function toggleRegra(k) { const d = el("det-" + k); if (d) d.classList.toggle("hidden"); }
 el("btnRegras").addEventListener("click", () => { renderRegras(); mostrarTela("regras"); });
 el("btnRegrasVoltar").addEventListener("click", () => mostrarTela("gravador"));
+
+// ---- Preparar e Treinar: plano colaborativo + ensaio fora das médias oficiais ----
+const PREP_KEY = "fd_preparacoes";
+function lerPreparacoes() {
+  try { const v = JSON.parse(localStorage.getItem(PREP_KEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; }
+}
+function gravarPreparacoes(lista) {
+  try { localStorage.setItem(PREP_KEY, JSON.stringify(lista.slice(0, 40))); } catch (e) {}
+}
+function novaPreparacaoId() { return `prep-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; }
+function linhas(value) { return String(value || "").split("\n").map((x) => x.trim()).filter(Boolean); }
+function renderPlanoPreparacao(plano) {
+  const p = plano || {};
+  const objecoes = (p.objecoes || []).map((x) => `${x.objecao || ""} => ${x.resposta || ""}`).join("\n");
+  el("prepPlano").innerHTML = `
+    <div class="prep-two">
+      <div class="prep-field"><label>Título sem nomes</label><input id="planTitulo" value="${esc(p.titulo || "")}"></div>
+      <div class="prep-field"><label>Objetivo</label><textarea id="planObjetivo">${esc(p.objetivo || "")}</textarea></div>
+    </div>
+    <div class="prep-field"><label>Como começar</label><textarea id="planAbertura">${esc(p.abertura || "")}</textarea></div>
+    <div class="prep-field"><label>Mensagem central</label><textarea id="planMensagem">${esc(p.mensagem_central || "")}</textarea></div>
+    <div class="prep-field"><label>Argumentos — um por linha, na ordem</label><textarea id="planArgumentos">${esc((p.argumentos || []).join("\n"))}</textarea></div>
+    <div class="prep-field"><label>Pedido ou fechamento</label><textarea id="planPedido">${esc(p.pedido || "")}</textarea></div>
+    <div class="prep-field"><label>Objeções e respostas — use Objeção =&gt; Resposta</label><textarea id="planObjecoes">${esc(objecoes)}</textarea></div>
+    <div class="prep-two">
+      <div class="prep-field"><label>Evitar — um por linha</label><textarea id="planEvitar">${esc((p.evitar || []).join("\n"))}</textarea></div>
+      <div class="prep-field"><label>Informações ainda pendentes</label><textarea id="planPendencias">${esc((p.pendencias || []).join("\n"))}</textarea></div>
+    </div>
+    <div class="prep-field"><label>Checklist do ensaio</label><textarea id="planChecklist">${esc((p.checklist || []).join("\n"))}</textarea></div>`;
+  el("prepEditor").classList.remove("hidden");
+}
+function coletarPlanoEditor() {
+  const objecoes = linhas(el("planObjecoes")?.value).map((linha) => {
+    const pos = linha.indexOf("=>");
+    return pos >= 0 ? { objecao: linha.slice(0, pos).trim(), resposta: linha.slice(pos + 2).trim() } : { objecao: linha, resposta: "" };
+  });
+  return {
+    titulo: el("planTitulo")?.value.trim() || "Preparação da conversa",
+    objetivo: el("planObjetivo")?.value.trim() || "",
+    abertura: el("planAbertura")?.value.trim() || "",
+    mensagem_central: el("planMensagem")?.value.trim() || "",
+    argumentos: linhas(el("planArgumentos")?.value),
+    pedido: el("planPedido")?.value.trim() || "",
+    objecoes,
+    evitar: linhas(el("planEvitar")?.value),
+    pendencias: linhas(el("planPendencias")?.value),
+    checklist: linhas(el("planChecklist")?.value),
+  };
+}
+async function salvarPreparacaoAtual(status = "draft") {
+  if (!preparacaoAtiva) return null;
+  if (!el("prepEditor").classList.contains("hidden")) preparacaoAtiva.plano = coletarPlanoEditor();
+  preparacaoAtiva.briefing = el("prepBrief").value.trim() || preparacaoAtiva.briefing || "";
+  preparacaoAtiva.status = status;
+  preparacaoAtiva.atualizada_em = new Date().toISOString();
+  preparacaoAtiva._sync = { state: "pending", updated_at: preparacaoAtiva._sync?.updated_at || null };
+  const lista = lerPreparacoes().filter((x) => x.id !== preparacaoAtiva.id);
+  lista.unshift(preparacaoAtiva);
+  gravarPreparacoes(lista);
+  const r = await fetch("/api/preparations", {
+    method: "POST",
+    headers: { "x-app-pass": APP_PASS, "content-type": "application/json" },
+    body: JSON.stringify({ preparacao: preparacaoAtiva }),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.erro || "Não consegui salvar a preparação.");
+  if (d.preparacao) preparacaoAtiva = d.preparacao;
+  renderPreparacoesSalvas();
+  return preparacaoAtiva;
+}
+async function carregarPreparacoes() {
+  if (!APP_PASS) { renderPreparacoesSalvas(); return; }
+  try {
+    const locais = lerPreparacoes();
+    const r = await fetch("/api/preparations", { headers: { "x-app-pass": APP_PASS } });
+    const d = await r.json().catch(() => ({}));
+    if (r.ok && Array.isArray(d.preparacoes)) {
+      const mapa = new Map(d.preparacoes.map((p) => [p.id, p]));
+      for (const p of locais) if (p._sync?.state === "pending" || !mapa.has(p.id)) mapa.set(p.id, p);
+      gravarPreparacoes([...mapa.values()].sort((a, b) => new Date(b.atualizada_em || b.data || 0) - new Date(a.atualizada_em || a.data || 0)));
+    }
+  } catch (e) {}
+  renderPreparacoesSalvas();
+}
+function renderPreparacoesSalvas() {
+  const lista = lerPreparacoes();
+  el("prepSalvas").innerHTML = lista.length ? lista.map((p) => {
+    const dt = new Date(p.atualizada_em || p.data || Date.now()).toLocaleDateString("pt-BR");
+    return `<button type="button" data-prep-id="${esc(p.id)}"><b>${esc(p.plano?.titulo || p.titulo || "Preparação")}</b><br><span class="hist-meta">${esc(dt)} · ${Number(p.tentativas || 0)} ensaio(s)</span></button>`;
+  }).join("") : '<p class="ctx-sub" style="text-align:left;">Nenhuma preparação salva ainda.</p>';
+}
+function abrirPreparacao(id) {
+  const p = lerPreparacoes().find((x) => x.id === id);
+  if (!p) return;
+  preparacaoAtiva = p;
+  el("prepBrief").value = p.briefing || "";
+  renderPlanoPreparacao(p.plano || {});
+  el("prepStatus").textContent = "Preparação carregada. Você pode editar ou pedir ajustes.";
+}
+async function gerarOuAjustarPreparacao(ajuste = "") {
+  const briefing = el("prepBrief").value.trim();
+  if (briefing.length < 20) { el("prepStatus").textContent = "Explique melhor a reunião e o resultado que pretende conseguir."; return; }
+  el("prepStatus").textContent = ajuste ? "Ajustando sem perder suas decisões…" : "Criando a primeira versão…";
+  const planoAtual = preparacaoAtiva && !el("prepEditor").classList.contains("hidden") ? coletarPlanoEditor() : null;
+  try {
+    const r = await fetch("/api/prepare", {
+      method: "POST",
+      headers: { "x-app-pass": APP_PASS, "content-type": "application/json" },
+      body: JSON.stringify({ briefing, ajuste, plano_atual: planoAtual, memoria: memoriaMentor() }),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.erro || "Não consegui preparar a conversa.");
+    if (!preparacaoAtiva || !ajuste) preparacaoAtiva = { id: novaPreparacaoId(), data: new Date().toISOString(), briefing, status: "draft", tentativas: 0 };
+    preparacaoAtiva.briefing = briefing;
+    preparacaoAtiva.plano = d.plano || {};
+    renderPlanoPreparacao(preparacaoAtiva.plano);
+    await salvarPreparacaoAtual("draft");
+    el("prepAjuste").value = "";
+    el("prepStatus").textContent = (preparacaoAtiva.plano.pendencias || []).length ? "Plano criado. Veja as informações pendentes, corrija e peça novos ajustes." : "Plano criado e salvo. Revise antes de treinar.";
+  } catch (e) { el("prepStatus").textContent = "Erro: " + e.message; }
+}
+async function iniciarTreinoPreparado() {
+  if (!preparacaoAtiva) return;
+  try { await salvarPreparacaoAtual("training"); }
+  catch (e) { el("prepStatus").textContent = "Erro: " + e.message; return; }
+  modoTreino = true;
+  setPessoas(1);
+  mainBlob = null; convoWords = []; chunks = [];
+  el("treinoBanner").classList.remove("hidden");
+  el("treinoBanner").textContent = `Ensaio ativo: ${preparacaoAtiva.plano.titulo || "preparação"}. Não altera suas médias.`;
+  el("hint").textContent = "Grave sua tentativa seguindo o plano aprovado.";
+  el("ctxText").value = `Ensaio: ${preparacaoAtiva.plano.titulo || "preparação"}. Objetivo: ${preparacaoAtiva.plano.objetivo || ""}`;
+  mostrarTela("gravador");
+}
+async function salvarTentativaTreino(dados, turnos, metricasPorLabel) {
+  if (!preparacaoAtiva) return;
+  const tentativa = {
+    id: `attempt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    preparation_id: preparacaoAtiva.id,
+    transcricao: turnos,
+    plano: preparacaoAtiva.plano || {},
+    metricas: metricasPorLabel,
+    analise: dados,
+  };
+  const r = await fetch("/api/practice-attempts", {
+    method: "POST",
+    headers: { "x-app-pass": APP_PASS, "content-type": "application/json" },
+    body: JSON.stringify({ tentativa }),
+  });
+  const out = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(out.erro || "Não consegui salvar o ensaio.");
+  preparacaoAtiva.tentativas = Number(preparacaoAtiva.tentativas || 0) + 1;
+  preparacaoAtiva.status = "training";
+  const lista = lerPreparacoes().filter((x) => x.id !== preparacaoAtiva.id);
+  lista.unshift(preparacaoAtiva);
+  gravarPreparacoes(lista);
+}
+el("btnPreparar").addEventListener("click", () => { modoTreino = false; el("treinoBanner").classList.add("hidden"); carregarPreparacoes(); mostrarTela("preparar"); });
+el("btnPrepVoltar").addEventListener("click", () => mostrarTela("gravador"));
+el("btnPrepCriar").addEventListener("click", () => { preparacaoAtiva = null; gerarOuAjustarPreparacao(""); });
+el("btnPrepAjustar").addEventListener("click", () => {
+  const ajuste = el("prepAjuste").value.trim();
+  if (!ajuste) { el("prepStatus").textContent = "Diga o que precisa mudar ou qual informação faltou."; return; }
+  gerarOuAjustarPreparacao(ajuste);
+});
+el("btnPrepSalvar").addEventListener("click", async () => { try { await salvarPreparacaoAtual("draft"); el("prepStatus").textContent = "Ajustes salvos."; } catch (e) { el("prepStatus").textContent = "Erro: " + e.message; } });
+el("btnPrepTreinar").addEventListener("click", iniciarTreinoPreparado);
+el("btnVoltarPrep").addEventListener("click", () => {
+  modoTreino = false;
+  el("treinoBanner").classList.add("hidden");
+  carregarPreparacoes();
+  mostrarTela("preparar");
+});
+el("prepSalvas").addEventListener("click", (e) => { const b = e.target.closest("[data-prep-id]"); if (b) abrirPreparacao(b.dataset.prepId); });
 
 // ---- Biblioteca de Comunicação: curadoria com fila humana, nunca alteração automática ----
 const LIB_KEY = "fd_biblioteca";
@@ -1342,9 +1598,11 @@ el("libResultado").addEventListener("click", (e) => {
 document.querySelectorAll(".desktop-nav [data-tela]").forEach((b) => {
   b.addEventListener("click", () => {
     const tela = b.dataset.tela;
+    if (tela === "gravador") { modoTreino = false; el("treinoBanner").classList.add("hidden"); }
     if (tela === "historico") renderHistorico();
     if (tela === "regras") renderRegras();
     if (tela === "biblioteca") renderBiblioteca();
+    if (tela === "preparar") { modoTreino = false; el("treinoBanner").classList.add("hidden"); carregarPreparacoes(); }
     mostrarTela(tela);
   });
 });
@@ -1366,6 +1624,7 @@ function memoriaMentor() {
   return `HISTÓRICO DE EVIDÊNCIAS (use apenas para confirmar recorrência; não presuma que um erro antigo se repetiu agora):\n${sessoes || "Sem trechos históricos suficientes."}`;
 }
 function salvarChatNoHistorico() {
+  if (modoTreino) return;
   try {
     const hist = JSON.parse(localStorage.getItem("fd_hist") || "[]");
     if (hist[idxAtual]) {
@@ -1406,6 +1665,7 @@ async function enviarChat() {
   salvarChatNoHistorico();
 }
 el("btnChat").addEventListener("click", () => {
+  if (modoTreino) return;
   if (!chatMsgs.length) chatMsgs = [{ role: "assistant", content: "Pode perguntar ou contestar qualquer ponto do laudo. Eu explico e defendo a análise, e te ajudo a treinar a correção." }];
   renderChat();
   mostrarTela("chat");
@@ -1443,6 +1703,7 @@ function prepararHistorico(h, contexto = "") {
   item.contexto = item.contexto || contexto || "";
   item.rigor = item.rigor || RIGOR;
   item.analysis_version = item.analysis_version || (item.macro ? "v0.40" : "legado");
+  if (item._sync && item._sync.state === "pending") item._sync = { state: "pending", updated_at: item._sync.updated_at || null };
   return item;
 }
 async function salvarHistoricoRemoto(h, origem = "app") {
@@ -1465,12 +1726,27 @@ async function atualizarHistoricoRemoto(body) {
     });
   } catch (e) {}
 }
-async function buscarHistoricoRemoto() {
-  const r = await fetch("/api/history", { headers: { "x-app-pass": APP_PASS } });
+async function buscarManifestoRemoto() {
+  const r = await fetch("/api/history?manifest=1", { headers: { "x-app-pass": APP_PASS } });
+  if (r.status === 401) { sairAcesso("Senha incorreta. Entre de novo."); throw new Error("Senha incorreta."); }
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.erro || "Não consegui consultar o banco.");
+  return Array.isArray(d.manifesto) ? d.manifesto : [];
+}
+async function buscarHistoricoRemoto(ids = []) {
+  const query = ids.length ? "?ids=" + encodeURIComponent(ids.join(",")) : "";
+  const r = await fetch("/api/history" + query, { headers: { "x-app-pass": APP_PASS } });
   if (r.status === 401) { sairAcesso("Senha incorreta. Entre de novo."); throw new Error("Senha incorreta."); }
   const d = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(d.erro || "Não consegui consultar o banco.");
   return Array.isArray(d.historico) ? d.historico : [];
+}
+function mesclarHistoricoLocal(itens) {
+  const mapa = new Map(lerHistoricoLocal().map((h) => [h.id, h]));
+  for (const h of itens || []) if (h?.id) mapa.set(h.id, prepararHistorico(h));
+  const lista = [...mapa.values()].sort((a, b) => new Date(b.data || 0) - new Date(a.data || 0));
+  gravarHistoricoLocal(lista);
+  return lista;
 }
 function setDbStatus(texto, classe = "") {
   const box = el("dbStatus");
@@ -1483,24 +1759,51 @@ async function sincronizarHistorico() {
   syncHistoricoRodando = true;
   let locais = lerHistoricoLocal().map((h) => prepararHistorico(h));
   gravarHistoricoLocal(locais);
-  let enviados = 0, jaSalvos = 0, semTranscricao = 0, reavaliados = 0;
+  let enviados = 0, baixados = 0, semTranscricao = 0, reavaliados = 0;
   try {
-    setDbStatus("Conferindo o histórico com o banco…", "warn");
-    let remoto = await buscarHistoricoRemoto();
-    const idsJaSalvos = new Set(remoto.map((h) => h.id));
-    const faltantes = [];
+    setDbStatus("Conferindo apenas o índice do banco…", "warn");
+    let manifesto = await buscarManifestoRemoto();
+    const porId = new Map(manifesto.map((m) => [m.id, m]));
+    const apagados = new Set(manifesto.filter((m) => m.deleted_at).map((m) => m.id));
+    locais = locais.filter((h) => !apagados.has(h.id));
+
     for (const h of locais) {
-      if (!h._sessao?.turnos) { semTranscricao++; continue; }
-      if (idsJaSalvos.has(h.id)) { jaSalvos++; continue; }
-      faltantes.push(h);
+      const remoto = porId.get(h.id);
+      if (h._sync?.state === "pending" && remoto && !remoto.deleted_at) {
+        h._sync = { state: "synced", updated_at: remoto.updated_at || null };
+      }
     }
-    if (faltantes.length) setDbStatus(`Enviando somente ${faltantes.length} conversa(s) ausente(s)…`, "warn");
-    for (const h of faltantes) {
-      await salvarHistoricoRemoto(h, "migracao_local");
+    const pendentesEnvio = locais.filter((h) => h._sync?.state === "pending" && h._sessao?.turnos && !porId.has(h.id));
+    semTranscricao = locais.filter((h) => !h._sessao?.turnos).length;
+    if (pendentesEnvio.length) setDbStatus(`Enviando ${pendentesEnvio.length} conversa(s) nova(s)…`, "warn");
+    for (const h of pendentesEnvio) {
+      const resposta = await salvarHistoricoRemoto(h, "app");
+      if (resposta.historico) {
+        const i = locais.findIndex((x) => x.id === h.id);
+        if (i >= 0) locais[i] = resposta.historico;
+      }
       enviados++;
     }
-    if (enviados) remoto = await buscarHistoricoRemoto();
-    const pendentes = remoto.filter((h) => h.analysis_version !== ANALYSIS_VERSION && h._sessao?.turnos);
+    if (enviados) { manifesto = await buscarManifestoRemoto(); porId.clear(); manifesto.forEach((m) => porId.set(m.id, m)); }
+
+    const mapaLocal = new Map(locais.map((h) => [h.id, h]));
+    const idsBaixar = [];
+    for (const m of manifesto) {
+      if (m.deleted_at) continue;
+      const local = mapaLocal.get(m.id);
+      if (!local) idsBaixar.push(m.id);
+      else if (local._sync?.updated_at && local._sync.updated_at !== m.updated_at) idsBaixar.push(m.id);
+      else if (!local._sync?.updated_at) local._sync = { state: "synced", updated_at: m.updated_at || null };
+    }
+    if (idsBaixar.length) {
+      setDbStatus(`Baixando ${idsBaixar.length} conversa(s) nova(s) ou alterada(s)…`, "warn");
+      const recebidas = await buscarHistoricoRemoto(idsBaixar);
+      baixados = recebidas.length;
+      for (const h of recebidas) mapaLocal.set(h.id, h);
+    }
+    locais = [...mapaLocal.values()].filter((h) => !apagados.has(h.id));
+
+    const pendentes = locais.filter((h) => porId.has(h.id) && h.analysis_version !== ANALYSIS_VERSION && h._sessao?.turnos);
     for (let i = 0; i < pendentes.length; i++) {
       setDbStatus(`Reavaliando conversas antigas no novo modelo: ${i + 1}/${pendentes.length}…`, "warn");
       const r = await fetch("/api/history-reanalyze", {
@@ -1510,15 +1813,19 @@ async function sincronizarHistorico() {
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d.erro || "Falha na reavaliação.");
+      if (d.historico) {
+        const pos = locais.findIndex((h) => h.id === d.historico.id);
+        if (pos >= 0) locais[pos] = d.historico;
+      }
       reavaliados++;
     }
-    remoto = await buscarHistoricoRemoto();
-    const idsRemotos = new Set(remoto.map((h) => h.id));
-    const preservados = locais.filter((h) => !idsRemotos.has(h.id));
-    gravarHistoricoLocal(remoto.concat(preservados));
+    locais.sort((a, b) => new Date(b.data || 0) - new Date(a.data || 0));
+    gravarHistoricoLocal(locais);
+    try { localStorage.setItem("fd_d1_sync_v2", "done"); } catch (e) {}
     renderHistorico();
     const extra = semTranscricao ? ` ${semTranscricao} registro(s) antigo(s) sem transcrição ficaram apenas neste aparelho.` : "";
-    setDbStatus(`Banco sincronizado: ${remoto.length} conversa(s). ${jaSalvos} já estava(m) salva(s); ${enviados} enviada(s) agora; ${reavaliados} reavaliada(s).${extra}`, "ok");
+    const totalBanco = manifesto.filter((m) => !m.deleted_at).length;
+    setDbStatus(`Banco sincronizado: ${totalBanco} conversa(s). ${enviados} enviada(s) agora; ${baixados} baixada(s); ${reavaliados} reavaliada(s).${extra}`, "ok");
   } catch (e) {
     setDbStatus("Banco não sincronizado: " + e.message + " A cópia local foi preservada.", "warn");
   } finally {
@@ -1533,11 +1840,12 @@ function salvarHistorico(d, contexto = "") {
       contexto,
       rigor: RIGOR,
       analysis_version: ANALYSIS_VERSION,
+      _sync: { state: "pending", updated_at: null },
     }), contexto);
     hist.unshift(item);
     gravarHistoricoLocal(hist);
     salvarHistoricoRemoto(item, "app")
-      .then(() => setDbStatus("Conversa salva no banco.", "ok"))
+      .then((resposta) => { if (resposta.historico) mesclarHistoricoLocal([resposta.historico]); setDbStatus("Conversa salva no banco.", "ok"); })
       .catch((e) => setDbStatus("Conversa salva neste aparelho; banco pendente: " + e.message, "warn"));
   } catch (e) {}
 }
@@ -1565,6 +1873,8 @@ function renderHistorico() {
 function verLaudo(i) {
   const hist = lerHistoricoLocal();
   if (hist[i]) {
+    modoTreino = false;
+    el("treinoBanner").classList.add("hidden");
     renderResultado(hist[i]);
     ultimaSessao = hist[i]._sessao || null;
     ultimoContexto = hist[i].contexto || "";
@@ -1644,9 +1954,18 @@ el("btnRec").addEventListener("click", () => { gravando ? pararGravacao() : inic
 el("btnNova").addEventListener("click", () => {
   mostrarTela("gravador");
   el("timer").textContent = "00:00";
-  el("hint").textContent = "Toque para ativar.";
-  el("ctxText").value = "";
+  if (modoTreino && preparacaoAtiva) {
+    el("treinoBanner").classList.remove("hidden");
+    el("hint").textContent = "Grave outra tentativa seguindo o mesmo plano.";
+    el("ctxText").value = `Ensaio: ${preparacaoAtiva.plano.titulo || "preparação"}. Objetivo: ${preparacaoAtiva.plano.objetivo || ""}`;
+  } else {
+    el("treinoBanner").classList.add("hidden");
+    el("hint").textContent = "Toque para ativar.";
+    el("ctxText").value = "";
+  }
   mainBlob = null;
+  convoWords = [];
+  chunks = [];
 });
 </script>
 </body>
