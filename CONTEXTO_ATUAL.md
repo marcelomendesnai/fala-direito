@@ -1,7 +1,7 @@
 # Fala Direito! — Contexto Atual
 
-**Atualizado em:** 22/08/2026
-**Estado no repositório:** v0.44 — sincronização incremental + Preparar e Treinar
+**Atualizado em:** 27/08/2026
+**Estado no repositório:** v0.45 — gravação retomável e recuperação local
 
 ## Propósito do projeto
 
@@ -127,8 +127,20 @@ Critério de aceitação: uma nova lição deve melhorar de forma concreta a cla
 - O resultado do ensaio compara a fala com o plano aprovado e mostra aderência por etapa e foco para a próxima tentativa.
 - A versão do modelo de análise oficial continua v0.42. A v0.44 é uma versão do aplicativo e não provoca reavaliação desnecessária das conversas.
 
+## Implementado nesta etapa (v0.45)
+
+- A gravação é salva localmente em pequenos trechos enquanto acontece, em vez de existir apenas na memória temporária da página.
+- Quando o navegador vai para segundo plano ou a tela é bloqueada, o app pausa a sessão e oferece **Retomar gravação**, **Usar o que foi salvo** ou **Descartar**.
+- Se o iPhone encerrar a página, o app recupera a sessão incompleta quando for aberto novamente.
+- Quando o microfone anterior não sobrevive ao bloqueio, a retomada cria uma nova parte ligada à mesma reunião.
+- Gravações com mais de uma parte são transcritas em ordem. A revisão alerta para conferir os locutores perto da retomada, pois o serviço de transcrição pode trocar os rótulos entre arquivos.
+- O áudio local de recuperação é removido depois que todas as partes são transcritas com sucesso ou quando Marcelo escolhe descartar.
+- A proteção retomável foi aplicada às conversas reais. O fluxo de ensaio preserva o comportamento anterior para não correr o risco de misturar ensaio recuperado com histórico oficial.
+- Validação local concluída: armazenamento, ordenação de partes, recuperação após reabertura e finalização do áudio salvo passaram; carregamento da página não apresentou erros. A interrupção real pelo bloqueio do iPhone ainda exige prova no aparelho publicado.
+
 ## Próxima etapa
 
+- Validar a v0.45 no iPhone usando um deploy de prévia: iniciar, bloquear a tela, reabrir, retomar, finalizar e conferir a transcrição completa antes de levar a mudança para a `main`.
 - Abrir ou atualizar a v0.44 e confirmar que conversas já salvas aparecem como `0 enviada(s) agora`.
 - Criar uma preparação real, corrigir pelo menos uma informação no plano e executar um ensaio completo.
 - Confirmar no uso publicado que o ensaio aparece apenas na preparação e não altera os gráficos ou contagens da Evolução.

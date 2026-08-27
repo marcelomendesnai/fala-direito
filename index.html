@@ -269,6 +269,11 @@ body {
   padding: 13px 16px; margin-top: 16px; font-size: 8.5pt; color: var(--text-soft);
 }
 .aviso b { color: var(--amber); }
+.resume-panel { margin: 16px auto 0; max-width: 560px; padding: 14px; border: 1px solid rgba(255,178,77,.32); border-radius: var(--r-md); background: rgba(255,178,77,.08); text-align: left; }
+.resume-title { color: var(--amber); font-family: var(--font-display); font-weight: 700; font-size: 9.5pt; }
+.resume-copy { color: var(--text-soft); font-size: 8.5pt; line-height: 1.5; margin-top: 5px; }
+.resume-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.resume-actions button { flex: 1 1 150px; }
 
 .footer { font-family: var(--font-display); text-align: center; color: var(--text-dim); font-size: 7.5pt; padding: 18px 0 4px; letter-spacing: 1.5px; }
 
@@ -463,7 +468,7 @@ body {
   <img class="sp-castor" src="m2labs-castor.png" alt="M2Labs" width="108" height="108">
   <div class="sp-word">M<span class="sp-2">2</span>Labs</div>
   <div class="sp-sign">por Marcelo Mendes</div>
-  <div class="sp-app">Fala direito! · v0.44</div>
+  <div class="sp-app">Fala direito! · v0.45</div>
 </div>
 <div class="wrap">
   <div id="gate" class="gate hidden">
@@ -520,6 +525,15 @@ body {
         <div class="aviso hidden" id="avisoMic">
           <b>Microfone bloqueado.</b> Libere o acesso ao microfone no navegador. A gravação só funciona no site publicado (HTTPS), não abrindo o arquivo direto.
         </div>
+        <div id="resumePanel" class="resume-panel hidden">
+          <div class="resume-title" id="resumeTitle">Gravação pausada</div>
+          <div class="resume-copy" id="resumeCopy">O áudio capturado até aqui está salvo neste aparelho.</div>
+          <div class="resume-actions">
+            <button id="btnRetomarGravacao" class="btn-sec" type="button">Retomar gravação</button>
+            <button id="btnUsarGravacao" class="btn-ghost" type="button">Usar o que foi salvo</button>
+            <button id="btnDescartarGravacao" class="btn-ghost" type="button">Descartar</button>
+          </div>
+        </div>
       </div>
 
       <div id="tela-contexto" class="hidden">
@@ -544,7 +558,7 @@ body {
 
       <div id="tela-revisao" class="hidden">
         <div class="ctx-titulo">Revisar transcrição</div>
-        <p class="ctx-sub">Toque no rótulo do locutor pra trocar quem falou cada parte. Depois conclua e rode a análise.</p>
+        <p class="ctx-sub" id="revSub">Toque no rótulo do locutor pra trocar quem falou cada parte. Depois conclua e rode a análise.</p>
         <div id="revLista"></div>
         <div class="acoes"><button id="btnRevOk" class="btn-sec">Concluir e voltar</button></div>
       </div>
@@ -670,7 +684,7 @@ body {
     </div>
   </div>
   <div class="footer">
-    <div class="m2-ver">FALA DIREITO! · FASE 1 · v0.44</div>
+    <div class="m2-ver">FALA DIREITO! · FASE 1 · v0.45</div>
     <div class="m2-assinatura">
     <div class="m2-sig">
       <svg width="26" height="26" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="M2Labs"><circle cx="100" cy="100" r="92" fill="#F1E5D2" stroke="#E1CFB2" stroke-width="3"/><circle cx="71" cy="60" r="20" fill="#7E5230"/><circle cx="129" cy="60" r="20" fill="#7E5230"/><circle cx="71" cy="63" r="9" fill="#BC8E60"/><circle cx="129" cy="63" r="9" fill="#BC8E60"/><ellipse cx="100" cy="98" rx="64" ry="58" fill="#9A6638"/><path d="M47 70 Q100 35 153 70" fill="none" stroke="#85562D" stroke-width="4" stroke-linecap="round" opacity="0.5"/><ellipse cx="100" cy="128" rx="44" ry="33" fill="#CFA274"/><circle cx="76" cy="82" r="9" fill="#2B1C10"/><circle cx="124" cy="82" r="9" fill="#2B1C10"/><circle cx="79" cy="79" r="2.6" fill="#FFFFFF"/><circle cx="127" cy="79" r="2.6" fill="#FFFFFF"/><ellipse cx="100" cy="110" rx="13" ry="9" fill="#3A2415"/><rect x="91" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><rect x="101" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><line x1="64" y1="124" x2="32" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="64" y1="132" x2="33" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="124" x2="168" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="132" x2="167" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/></svg>
@@ -682,6 +696,7 @@ body {
 </div>
 <div id="blackout"></div>
 
+<script src="recording-store.js"></script>
 <script>
 const ENDPOINT = "/api/analyze";
 
@@ -709,6 +724,16 @@ const ANALYSIS_VERSION = "v0.42";
 let syncHistoricoRodando = false;
 let preparacaoAtiva = null;
 let modoTreino = false;
+let mainBlobs = [];
+let recordingSessionId = null;
+let recordingPart = 0;
+let recordingSeq = 0;
+let recordingPartsMemory = [[]];
+let recordingPaused = false;
+let finishingRecording = false;
+let persistenceAvailable = true;
+let persistenceQueue = Promise.resolve();
+let restoredSession = null;
 
 const el = (id) => document.getElementById(id);
 setTimeout(() => { const sp = document.getElementById("splash"); if (sp) sp.remove(); }, 3300);
@@ -736,6 +761,7 @@ function fmt(s) {
 function tickTimer() {
   segundos++;
   el("timer").textContent = fmt(segundos);
+  if (segundos % 10 === 0) salvarEstadoSessao({ segundos });
 }
 
 let wakeLockOK = false;
@@ -752,31 +778,122 @@ async function soltarWakeLock() {
   try { if (wakeLock) { await wakeLock.release(); wakeLock = null; } } catch (e) {}
 }
 
-async function iniciarGravacao() {
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  } catch (e) {
+function novaSessaoId() {
+  if (crypto && crypto.randomUUID) return crypto.randomUUID();
+  return "fd-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+}
+
+function enfileirarPersistencia(action) {
+  if (!persistenceAvailable || !recordingSessionId || modoTreino) return persistenceQueue;
+  persistenceQueue = persistenceQueue.then(action).catch(() => {
+    persistenceAvailable = false;
     el("avisoMic").classList.remove("hidden");
-    return;
-  }
-  el("avisoMic").classList.add("hidden");
-  await pedirWakeLock();
-  chunks = [];
-  mediaRecorder = new MediaRecorder(stream);
-  mediaRecorder.ondataavailable = (ev) => { if (ev.data.size > 0) chunks.push(ev.data); };
-  mediaRecorder.onstop = irParaContexto;
-  mediaRecorder.start(1000);
+    el("avisoMic").innerHTML = "<b>Proteção local indisponível.</b> A gravação continua, mas não poderá ser recuperada se o navegador encerrar a página.";
+  });
+  return persistenceQueue;
+}
 
-  gravando = true;
-  segundos = 0;
-  el("timer").textContent = "00:00";
-  timerInt = setInterval(tickTimer, 1000);
+function salvarEstadoSessao(patch) {
+  return enfileirarPersistencia(() => FDRecordingStore.updateSession(recordingSessionId, patch));
+}
 
+function streamContinuaAtivo() {
+  return Boolean(stream && stream.getAudioTracks().some((track) => track.readyState === "live"));
+}
+
+function atualizarVisualGravando() {
+  el("resumePanel").classList.add("hidden");
   el("btnRec").classList.add("gravando");
   el("recWrap").classList.add("gravando");
   el("recIcon").textContent = "◎";
   el("recLabel").textContent = "Parar";
   el("hint").textContent = "Gravando…";
+}
+
+function mostrarRetomada(titulo, texto) {
+  el("blackout").classList.remove("on");
+  el("resumeTitle").textContent = titulo || "Gravação pausada";
+  el("resumeCopy").textContent = texto || "O áudio capturado até aqui está salvo neste aparelho.";
+  el("resumePanel").classList.remove("hidden");
+  el("btnRec").classList.remove("gravando");
+  el("recWrap").classList.remove("gravando");
+  el("recIcon").textContent = "▶";
+  el("recLabel").textContent = "Retomar";
+  el("hint").textContent = "A gravação está pausada.";
+  mostrarTela("gravador");
+}
+
+function registrarChunk(ev, part) {
+  if (!ev.data || ev.data.size <= 0) return;
+  if (!recordingPartsMemory[part]) recordingPartsMemory[part] = [];
+  recordingPartsMemory[part].push(ev.data);
+  chunks.push(ev.data);
+  const seq = recordingSeq++;
+  enfileirarPersistencia(() => FDRecordingStore.saveChunk(recordingSessionId, part, seq, ev.data, ev.data.type));
+}
+
+async function abrirNovoTrecho() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (e) {
+    el("avisoMic").classList.remove("hidden");
+    el("avisoMic").innerHTML = "<b>Microfone bloqueado.</b> Libere o acesso ao microfone para continuar.";
+    return false;
+  }
+  const part = recordingPart;
+  if (!recordingPartsMemory[part]) recordingPartsMemory[part] = [];
+  mediaRecorder = new MediaRecorder(stream);
+  mediaRecorder.ondataavailable = (ev) => registrarChunk(ev, part);
+  mediaRecorder.onstop = () => {
+    if (finishingRecording) concluirGravacaoSalva();
+    else if (!recordingPaused) pausarPorInterrupcao();
+  };
+  stream.getAudioTracks().forEach((track) => {
+    track.addEventListener("ended", () => { if (!finishingRecording) pausarPorInterrupcao(); });
+  });
+  mediaRecorder.start(1000);
+  return true;
+}
+
+async function iniciarGravacao() {
+  if (recordingPaused || restoredSession) { await retomarGravacao(); return; }
+  recordingSessionId = novaSessaoId();
+  recordingPart = 0;
+  recordingSeq = 0;
+  recordingPartsMemory = [[]];
+  chunks = [];
+  mainBlob = null;
+  mainBlobs = [];
+  finishingRecording = false;
+  persistenceAvailable = true;
+  persistenceQueue = Promise.resolve();
+  if (!modoTreino) {
+    try {
+      await FDRecordingStore.createSession({
+        id: recordingSessionId,
+        status: "recording",
+        segundos: 0,
+        currentPart: 0,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+    } catch (e) { persistenceAvailable = false; }
+  }
+  if (!await abrirNovoTrecho()) {
+    if (!modoTreino && persistenceAvailable) FDRecordingStore.deleteSession(recordingSessionId).catch(() => {});
+    recordingSessionId = null;
+    return;
+  }
+  el("avisoMic").classList.add("hidden");
+  await pedirWakeLock();
+
+  gravando = true;
+  recordingPaused = false;
+  segundos = 0;
+  el("timer").textContent = "00:00";
+  timerInt = setInterval(tickTimer, 1000);
+  atualizarVisualGravando();
   if (wakeLockOK) {
     el("blackout").classList.add("on");   // modo discreto: tela preta, 3 toques revelam
   } else {
@@ -785,12 +902,101 @@ async function iniciarGravacao() {
   }
 }
 
-function pararGravacao() {
-  if (!mediaRecorder) return;
+async function pausarPorInterrupcao() {
+  if (recordingPaused || finishingRecording || (!gravando && !mediaRecorder)) return;
   gravando = false;
+  recordingPaused = true;
   clearInterval(timerInt);
-  mediaRecorder.stop();
-  if (stream) stream.getTracks().forEach((t) => t.stop());
+  try {
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+      mediaRecorder.requestData();
+      mediaRecorder.pause();
+    }
+  } catch (e) {}
+  salvarEstadoSessao({ status: "paused", segundos, currentPart: recordingPart });
+  mostrarRetomada("Gravação pausada", "O iPhone interrompeu a captura. O áudio gravado até aqui foi preservado; retome quando voltar à reunião.");
+  soltarWakeLock();
+}
+
+async function retomarGravacao() {
+  if (!recordingPaused && !restoredSession) return;
+  el("avisoMic").classList.add("hidden");
+  await pedirWakeLock();
+  let resumed = false;
+  if (mediaRecorder && mediaRecorder.state === "paused" && streamContinuaAtivo()) {
+    try { mediaRecorder.resume(); resumed = true; } catch (e) {}
+  } else if (mediaRecorder && mediaRecorder.state === "recording" && streamContinuaAtivo()) {
+    resumed = true;
+  }
+  if (!resumed) {
+    if (stream) stream.getTracks().forEach((track) => track.stop());
+    if (restoredSession) {
+      recordingPart = Number(restoredSession.currentPart || 0) + 1;
+    } else {
+      recordingPart += 1;
+    }
+    recordingSeq = 0;
+    if (!await abrirNovoTrecho()) {
+      mostrarRetomada("Não consegui retomar", "O áudio anterior continua salvo. Libere o microfone e tente novamente.");
+      return;
+    }
+  }
+  restoredSession = null;
+  recordingPaused = false;
+  gravando = true;
+  finishingRecording = false;
+  clearInterval(timerInt);
+  timerInt = setInterval(tickTimer, 1000);
+  atualizarVisualGravando();
+  salvarEstadoSessao({ status: "recording", segundos, currentPart: recordingPart });
+  if (wakeLockOK) el("blackout").classList.add("on");
+}
+
+async function montarPartesSalvas() {
+  await persistenceQueue;
+  let records = [];
+  if (persistenceAvailable && recordingSessionId && !modoTreino) {
+    try { records = await FDRecordingStore.getSessionChunks(recordingSessionId); }
+    catch (e) { records = []; }
+  }
+  const byPart = new Map();
+  if (records.length) {
+    records.forEach((item) => {
+      if (!byPart.has(item.part)) byPart.set(item.part, []);
+      byPart.get(item.part).push(item);
+    });
+    mainBlobs = [...byPart.keys()].sort((a, b) => a - b).map((part) => {
+      const items = byPart.get(part).sort((a, b) => a.seq - b.seq);
+      return new Blob(items.map((item) => item.blob), { type: items[0]?.mimeType || "audio/webm" });
+    }).filter((blob) => blob.size >= 2000);
+  } else {
+    mainBlobs = recordingPartsMemory.map((part) => new Blob(part, { type: part[0]?.type || "audio/webm" })).filter((blob) => blob.size >= 2000);
+  }
+  mainBlob = mainBlobs[0] || null;
+  return mainBlobs;
+}
+
+async function concluirGravacaoSalva() {
+  if (!finishingRecording) return;
+  if (stream) stream.getTracks().forEach((track) => track.stop());
+  await montarPartesSalvas();
+  salvarEstadoSessao({ status: "ready", segundos, currentPart: recordingPart });
+  irParaContexto();
+}
+
+async function pararGravacao() {
+  if (!mediaRecorder && !recordingSessionId) return;
+  gravando = false;
+  recordingPaused = false;
+  finishingRecording = true;
+  restoredSession = null;
+  clearInterval(timerInt);
+  el("resumePanel").classList.add("hidden");
+  if (mediaRecorder && ["recording", "paused"].includes(mediaRecorder.state)) {
+    try { mediaRecorder.requestData(); } catch (e) {}
+    try { mediaRecorder.stop(); return; } catch (e) {}
+  }
+  await concluirGravacaoSalva();
 
   el("btnRec").classList.remove("gravando");
   el("recWrap").classList.remove("gravando");
@@ -1034,7 +1240,10 @@ pintarRigor();
 // ---- contexto + análise ----
 function irParaContexto() {
   soltarWakeLock();
-  mainBlob = new Blob(chunks, { type: "audio/webm" });
+  if (!mainBlob) {
+    mainBlob = new Blob(chunks, { type: chunks[0]?.type || "audio/webm" });
+    mainBlobs = mainBlob.size ? [mainBlob] : [];
+  }
   if (!mainBlob.size || mainBlob.size < 2000) {
     mostrarTela("gravador");
     el("avisoMic").classList.remove("hidden");
@@ -1176,20 +1385,37 @@ function substituirHistorico(idx, d) {
 
 // ---- transcrever a conversa, revisar locutores e rodar a análise ----
 async function transcreveConversa(cb) {
-  if (!mainBlob) return;
+  const audios = mainBlobs.length ? mainBlobs : (mainBlob ? [mainBlob] : []);
+  if (!audios.length) return;
   mostrarTela("processando");
   el("procPasso").textContent = "Transcrevendo…";
-  const fd = new FormData();
-  fd.append("audio", mainBlob, "gravacao.webm");
-  fd.append("num_speakers", String(numPessoas));
   try {
-    const r = await fetch("/api/transcribe-convo", { method: "POST", headers: { "x-app-pass": APP_PASS }, body: fd });
-    if (r.status === 401) { sairAcesso("Senha incorreta. Entre de novo."); return; }
-    const d = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error((d && d.erro) ? d.erro : ("HTTP " + r.status));
-    convoWords = d.words || [];
+    const merged = [];
+    let offset = 0;
+    for (let i = 0; i < audios.length; i++) {
+      el("procPasso").textContent = audios.length > 1 ? `Transcrevendo parte ${i + 1} de ${audios.length}…` : "Transcrevendo…";
+      const fd = new FormData();
+      fd.append("audio", audios[i], `gravacao-parte-${i + 1}.webm`);
+      fd.append("num_speakers", String(numPessoas));
+      const r = await fetch("/api/transcribe-convo", { method: "POST", headers: { "x-app-pass": APP_PASS }, body: fd });
+      if (r.status === 401) { sairAcesso("Senha incorreta. Entre de novo."); return; }
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error((d && d.erro) ? d.erro : ("HTTP " + r.status));
+      const words = d.words || [];
+      words.forEach((word) => merged.push({ ...word, s: (word.s || 0) + offset, e: (word.e || 0) + offset }));
+      const fim = words.reduce((max, word) => Math.max(max, Number(word.e) || 0), 0);
+      offset += fim + 0.25;
+    }
+    convoWords = merged;
     if (!convoWords.length) throw new Error("Não consegui transcrever (áudio curto/sem voz?).");
+    el("revSub").textContent = audios.length > 1
+      ? `Esta gravação foi retomada em ${audios.length} partes. Confira os locutores perto de cada retomada, pois a identificação pode trocar depois da pausa.`
+      : "Toque no rótulo do locutor pra trocar quem falou cada parte. Depois conclua e rode a análise.";
     mapearIdentidades();
+    if (recordingSessionId && !modoTreino) {
+      FDRecordingStore.deleteSession(recordingSessionId).catch(() => {});
+      recordingSessionId = null;
+    }
     if (cb) cb(); else mostrarTela("contexto");
   } catch (e) {
     mostrarTela("contexto");
@@ -1948,8 +2174,80 @@ el("blackout").addEventListener("click", () => {
 });
 
 document.addEventListener("visibilitychange", () => {
-  if (gravando && document.visibilityState === "visible") pedirWakeLock();
+  if (document.visibilityState === "hidden" && gravando) {
+    pausarPorInterrupcao();
+    return;
+  }
+  if (document.visibilityState === "visible") {
+    if (recordingPaused) mostrarRetomada("Gravação pausada", "O áudio capturado até aqui está salvo neste aparelho. Retome quando estiver pronto.");
+    else if (gravando && (!mediaRecorder || mediaRecorder.state === "inactive" || !streamContinuaAtivo())) pausarPorInterrupcao();
+    else if (gravando) pedirWakeLock();
+  }
 });
+window.addEventListener("pagehide", () => { if (gravando) pausarPorInterrupcao(); });
+
+async function descartarGravacaoSalva() {
+  const sessionId = recordingSessionId;
+  finishingRecording = true;
+  gravando = false;
+  recordingPaused = false;
+  restoredSession = null;
+  clearInterval(timerInt);
+  if (mediaRecorder) {
+    mediaRecorder.onstop = null;
+    try { if (mediaRecorder.state !== "inactive") mediaRecorder.stop(); } catch (e) {}
+  }
+  if (stream) stream.getTracks().forEach((track) => track.stop());
+  await persistenceQueue;
+  if (sessionId && !modoTreino) await FDRecordingStore.deleteSession(sessionId).catch(() => {});
+  recordingSessionId = null;
+  mediaRecorder = null;
+  stream = null;
+  recordingPartsMemory = [[]];
+  chunks = [];
+  mainBlob = null;
+  mainBlobs = [];
+  segundos = 0;
+  el("timer").textContent = "00:00";
+  el("resumePanel").classList.add("hidden");
+  el("btnRec").classList.remove("gravando");
+  el("recWrap").classList.remove("gravando");
+  el("recIcon").textContent = "◎";
+  el("recLabel").textContent = "GPS ativo";
+  el("hint").textContent = "Toque para ativar.";
+  finishingRecording = false;
+}
+
+async function restaurarSessaoPendente() {
+  try {
+    await FDRecordingStore.open();
+    const session = await FDRecordingStore.getLatestRecoverableSession();
+    if (!session) return;
+    const savedChunks = await FDRecordingStore.getSessionChunks(session.id);
+    if (!savedChunks.length) {
+      await FDRecordingStore.deleteSession(session.id);
+      return;
+    }
+    restoredSession = session;
+    recordingSessionId = session.id;
+    recordingPart = Number(session.currentPart || 0);
+    recordingSeq = 0;
+    recordingPartsMemory = [];
+    chunks = [];
+    segundos = Number(session.segundos || 0);
+    el("timer").textContent = fmt(segundos);
+    recordingPaused = true;
+    gravando = false;
+    mostrarRetomada("Gravação recuperada", "O navegador foi interrompido, mas o áudio já capturado continua salvo. Você pode retomar ou usar o que foi gravado.");
+    salvarEstadoSessao({ status: "paused", segundos, currentPart: recordingPart });
+  } catch (e) {
+    persistenceAvailable = false;
+  }
+}
+
+el("btnRetomarGravacao").addEventListener("click", retomarGravacao);
+el("btnUsarGravacao").addEventListener("click", pararGravacao);
+el("btnDescartarGravacao").addEventListener("click", descartarGravacaoSalva);
 el("btnRec").addEventListener("click", () => { gravando ? pararGravacao() : iniciarGravacao(); });
 el("btnNova").addEventListener("click", () => {
   mostrarTela("gravador");
@@ -1964,9 +2262,11 @@ el("btnNova").addEventListener("click", () => {
     el("ctxText").value = "";
   }
   mainBlob = null;
+  mainBlobs = [];
   convoWords = [];
   chunks = [];
 });
+restaurarSessaoPendente();
 </script>
 </body>
 </html>
