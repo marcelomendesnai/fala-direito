@@ -649,6 +649,7 @@ body {
 
         <div class="acoes">
           <button class="btn-sec" id="btnNova">Nova gravação</button>
+          <div style="margin-top:10px;"><button class="btn-ghost" id="btnCopiarTranscricao">📋 Copiar transcrição</button></div>
           <div style="margin-top:10px;"><button class="btn-ghost" id="btnChat">💬 Conversar com o mentor</button></div>
           <div style="margin-top:10px;"><button class="btn-ghost" id="btnCorrigir">✏️ Corrigir contexto e reanalisar</button></div>
           <div style="margin-top:10px;"><button class="btn-ghost" id="btnHist2">📈 Ver evolução</button></div>
@@ -1884,6 +1885,32 @@ function verLaudo(i) {
     mostrarTela("resultado");
   }
 }
+async function copiarTranscricao() {
+  const botao = el("btnCopiarTranscricao");
+  const transcricao = String(ultimaSessao?.turnos || "").trim();
+  if (!transcricao) {
+    botao.textContent = "Transcrição indisponível";
+    setTimeout(() => { botao.textContent = "📋 Copiar transcrição"; }, 1800);
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(transcricao);
+    botao.textContent = "✅ Transcrição copiada";
+  } catch (e) {
+    const campo = document.createElement("textarea");
+    campo.value = transcricao;
+    campo.setAttribute("readonly", "");
+    campo.style.position = "fixed";
+    campo.style.opacity = "0";
+    document.body.appendChild(campo);
+    campo.select();
+    const copiou = document.execCommand("copy");
+    campo.remove();
+    botao.textContent = copiou ? "✅ Transcrição copiada" : "Não consegui copiar";
+  }
+  setTimeout(() => { botao.textContent = "📋 Copiar transcrição"; }, 1800);
+}
+el("btnCopiarTranscricao").addEventListener("click", copiarTranscricao);
 function renomearHist(i) {
   const hist = lerHistoricoLocal();
   if (!hist[i]) return;
