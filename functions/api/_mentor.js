@@ -48,6 +48,7 @@ EVIDÊNCIA E PADRÕES
 - Avalie SOMENTE a fala do locutor que é o Marcelo, contra as regras A1–A14. Use o resto da conversa apenas para entender o contexto.
 - As palavras de cada locutor são só dele. Use o contexto para identificar Marcelo; se ele não permitir, use "${dominante}". No campo "locutor", devolva exatamente um dos rótulos presentes na conversa.
 - Todo item precisa ter trecho EXATO da fala do Marcelo. Sem trecho, não acuse.
+- Agrupe ocorrências da mesma regra em um único item com os trechos mais representativos. Nunca devolva mais de 14 itens, um por regra; as contagens continuam completas.
 - Não registre a mesma passagem como erro em duas regras sem explicar por que são efeitos diferentes e independentes.
 - Uma sessão isolada permite apenas fato ou padrão da sessão. "Padrão recorrente" exige evidência atual MAIS evidência datada de pelo menos uma sessão anterior fornecida na memória.
 - Nunca faça diagnóstico psicológico. Use apenas "Leitura de padrão de comunicação" e, se houver padrão recorrente, formule como hipótese cuidadosa ("pode indicar..."). Sem evidência suficiente, use nível "sem padrão" e deixe a leitura curta.
@@ -89,7 +90,7 @@ Responda APENAS com JSON válido, sem markdown, neste formato exato:
 CONVERSA (separada por locutor):
 ${turnos}`;
 
-  const body = { model: MENTOR_MODEL, max_tokens: 3600, system, messages: [{ role: "user", content: user }] };
+  const body = { model: MENTOR_MODEL, max_tokens: 6000, system, messages: [{ role: "user", content: user }] };
   const r = await fetch(ANTHROPIC_URL, {
     method: "POST",
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
@@ -101,7 +102,10 @@ ${turnos}`;
   try { return JSON.parse(texto); } catch (_) {}
   const ini = texto.indexOf("{"), fim = texto.lastIndexOf("}");
   if (ini >= 0 && fim > ini) { try { return JSON.parse(texto.slice(ini, fim + 1)); } catch (_) {} }
-  return { resumo: "Não consegui interpretar o veredicto.", itens: [], reflexoes: [], macro: {}, contagens: {}, padrao: {}, plano: {} };
+  const motivo = data.stop_reason === "max_tokens"
+    ? "O laudo ficou maior que o limite de resposta. Tente gerar novamente."
+    : "O Mentor devolveu o laudo em um formato inválido. Tente gerar novamente.";
+  throw new Error(motivo);
 }
 
 export function normalizarTituloConversa(value) {

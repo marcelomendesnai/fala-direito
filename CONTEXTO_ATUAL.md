@@ -1,7 +1,7 @@
 # Fala Direito! — Contexto Atual
 
-**Atualizado em:** 22/08/2026
-**Estado no repositório:** v0.44 — sincronização incremental + Preparar e Treinar
+**Atualizado em:** 28/09/2026
+**Estado em produção:** v0.44.2 — saúde do sistema, recuperação de laudo e UX móvel
 
 ## Propósito do projeto
 
@@ -126,6 +126,15 @@ Critério de aceitação: uma nova lição deve melhorar de forma concreta a cla
 - O ensaio usa as regras e as evidências do histórico real para personalizar o treino, mas é avaliado em rota separada e **nunca entra no histórico oficial, nas médias nem na confirmação de padrões recorrentes**.
 - O resultado do ensaio compara a fala com o plano aprovado e mostra aderência por etapa e foco para a próxima tentativa.
 - A versão do modelo de análise oficial continua v0.42. A v0.44 é uma versão do aplicativo e não provoca reavaliação desnecessária das conversas.
+
+## Implementado nesta etapa (v0.44.2)
+
+- A página principal fica presa à viewport no iPhone/PWA; o conteúdo rola dentro do aplicativo sem o deslocamento elástico da tela inteira.
+- Nova área **Saúde do sistema** verifica Cloudflare, D1, ElevenLabs, Anthropic, microfone e armazenamento local sem gravar áudio nem consumir uma análise.
+- O endpoint de saúde agora exige a senha do app e não expõe a lista de variáveis do ambiente.
+- Respostas inválidas ou truncadas do Mentor deixam de ser salvas como laudo vazio; a transcrição é preservada e a tela oferece nova tentativa.
+- O limite de saída do Mentor foi ampliado e ocorrências da mesma regra passam a ser agrupadas para reduzir o risco de truncamento em conversas longas.
+- O laudo ganhou o botão **Copiar transcrição**, inclusive no histórico.
 
 ## Próxima etapa
 

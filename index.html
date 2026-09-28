@@ -79,7 +79,9 @@
   --font-display: 'Space Grotesk', 'Inter', -apple-system, system-ui, sans-serif;
 }
 
-html, body { background: var(--bg); }
+/* A viewport fica fixa; somente o conteúdo interno rola. Isso elimina o
+   pull-to-refresh/rubber band do iPhone sem bloquear a leitura do laudo. */
+html, body { width: 100%; height: 100%; background: var(--bg); overscroll-behavior: none; }
 
 body {
   font-family: var(--font-body);
@@ -88,15 +90,25 @@ body {
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   font-variant-numeric: tabular-nums;
-  padding: 16px;
-  min-height: 100vh;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  overflow: hidden;
   background:
     radial-gradient(900px 500px at 15% -10%, rgba(124,92,255,0.22), transparent 60%),
     radial-gradient(800px 520px at 110% 10%, rgba(34,211,238,0.16), transparent 55%),
     var(--bg);
   background-attachment: fixed;
 }
-.wrap { max-width: 660px; margin: 0 auto; }
+.wrap {
+  max-width: 660px;
+  height: 100%;
+  margin: 0 auto;
+  overflow-y: auto;
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+}
 
 .app {
   background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
@@ -422,6 +434,20 @@ body {
 .practice-compare { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--cyan); border-radius: var(--r-md); padding: 14px 16px; margin: 14px 0 18px; }
 .practice-score { font-family: var(--font-display); color: var(--cyan); font-size: 18pt; font-weight: 700; }
 .practice-step { padding: 8px 0; border-top: 1px solid var(--border); font-size: 8.5pt; color: var(--text-soft); }
+.report-failure { background: var(--erro-bg); border: 1px solid rgba(255,93,115,.35); border-radius: var(--r-lg); padding: 15px 16px; margin-bottom: 16px; }
+.report-failure .title { font-family: var(--font-display); font-weight: 700; color: var(--erro); margin-bottom: 5px; }
+.report-failure p { color: var(--text-soft); font-size: 8.5pt; line-height: 1.55; }
+.report-failure .btn-sec { margin-top: 12px; }
+.health-grid { display: grid; gap: 10px; margin: 18px 0; }
+.health-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 11px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 13px 14px; }
+.health-dot { width: 11px; height: 11px; border-radius: 50%; background: var(--text-dim); box-shadow: 0 0 0 4px rgba(107,118,137,.1); }
+.health-card.ok .health-dot { background: var(--ok); box-shadow: 0 0 0 4px var(--ok-bg); }
+.health-card.warn .health-dot { background: var(--amber); box-shadow: 0 0 0 4px var(--amber-bg); }
+.health-card.error .health-dot { background: var(--erro); box-shadow: 0 0 0 4px var(--erro-bg); }
+.health-name { font-family: var(--font-display); font-weight: 600; color: var(--text); }
+.health-detail { color: var(--text-soft); font-size: 8pt; margin-top: 2px; }
+.health-latency { color: var(--text-dim); font-family: var(--font-display); font-size: 7.5pt; white-space: nowrap; }
+.health-summary { color: var(--text-soft); font-size: 8.5pt; text-align: center; min-height: 20px; }
 
 .hidden { display: none !important; }
 
@@ -433,6 +459,7 @@ body {
   .timer { font-size: 48pt; }
   .rec-btn { width: 128px; height: 128px; }
   .prep-two { grid-template-columns: 1fr 1fr; }
+  .health-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (min-width: 980px) {
@@ -451,7 +478,7 @@ body {
   .recorder { max-width: 650px; margin: 80px auto 0; }
   .macro-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .resultado-colunas { grid-template-columns: minmax(0, 1.18fr) minmax(300px, .82fr); align-items: start; }
-  #tela-historico, #tela-regras, #tela-biblioteca, #tela-preparar, #tela-contexto, #tela-revisao, #tela-chat { max-width: 980px; margin: 0 auto; }
+  #tela-historico, #tela-regras, #tela-biblioteca, #tela-preparar, #tela-saude, #tela-contexto, #tela-revisao, #tela-chat { max-width: 980px; margin: 0 auto; }
   .library-form { max-width: 980px; }
   .library-source { min-height: 320px; }
   .chat-msgs { max-height: 58vh; }
@@ -463,7 +490,7 @@ body {
   <img class="sp-castor" src="m2labs-castor.png" alt="M2Labs" width="108" height="108">
   <div class="sp-word">M<span class="sp-2">2</span>Labs</div>
   <div class="sp-sign">por Marcelo Mendes</div>
-  <div class="sp-app">Fala direito! · v0.44</div>
+  <div class="sp-app">Fala direito! · v0.44.2</div>
 </div>
 <div class="wrap">
   <div id="gate" class="gate hidden">
@@ -487,6 +514,7 @@ body {
         <button type="button" data-tela="historico">↗ Evolução</button>
         <button type="button" data-tela="regras">☷ Regras e treino</button>
         <button type="button" data-tela="biblioteca">▣ Biblioteca</button>
+        <button type="button" data-tela="saude">◈ Saúde do sistema</button>
       </nav>
     </div>
 
@@ -516,6 +544,7 @@ body {
         <button id="btnRegras" class="discreto-btn" style="margin-left:8px;">📜 Regras</button>
         <button id="btnBiblioteca" class="discreto-btn" style="margin-left:8px;">▣ Biblioteca</button>
         <button id="btnPreparar" class="discreto-btn" style="margin-left:8px;">◇ Preparar e treinar</button>
+        <button id="btnSaude" class="discreto-btn" style="margin-left:8px;">◈ Saúde</button>
         <div id="dbStatus" class="db-status">Histórico: aguardando conexão com o banco.</div>
         <div class="aviso hidden" id="avisoMic">
           <b>Microfone bloqueado.</b> Libere o acesso ao microfone no navegador. A gravação só funciona no site publicado (HTTPS), não abrindo o arquivo direto.
@@ -598,6 +627,15 @@ body {
         <div class="acoes"><button class="btn-ghost" id="btnPrepVoltar">Voltar</button></div>
       </div>
 
+      <div id="tela-saude" class="hidden">
+        <div class="ctx-titulo">Saúde do sistema</div>
+        <p class="ctx-sub">Verifica agora as conexões essenciais sem gravar áudio nem consumir uma análise.</p>
+        <div id="healthGrid" class="health-grid"></div>
+        <div id="healthSummary" class="health-summary">Toque em verificar para consultar os serviços.</div>
+        <div class="ctx-acoes"><button id="btnHealthCheck" class="btn-sec">Verificar agora</button></div>
+        <div class="acoes"><button class="btn-ghost" id="btnSaudeVoltar">Voltar</button></div>
+      </div>
+
       <div id="tela-chat" class="hidden">
         <div class="ctx-titulo">Conversar com o mentor</div>
         <div id="chatMsgs" class="chat-msgs"></div>
@@ -616,6 +654,12 @@ body {
 
       <div id="tela-resultado" class="hidden">
         <div id="treinoResultadoAviso" class="prep-banner hidden">Resultado de ensaio: serve para treino e não entra nas médias oficiais.</div>
+        <div id="laudoFalhou" class="report-failure hidden">
+          <div class="title">O laudo não foi gerado</div>
+          <p>A transcrição está preservada. Você pode copiá-la ou tentar gerar o relatório novamente sem regravar a conversa.</p>
+          <button id="btnTentarLaudo" class="btn-sec">Tentar gerar novamente</button>
+        </div>
+        <div id="conteudoLaudo">
         <div class="resultado-topo">
           <div class="resultado-eyebrow" id="resultadoEyebrow">Laudo da conversa</div>
           <div class="resultado-titulo" id="resultadoTitulo">Visão geral</div>
@@ -646,6 +690,7 @@ body {
             <div id="blocoPlano"></div>
           </div>
         </div>
+        </div>
 
         <div class="acoes">
           <button class="btn-sec" id="btnNova">Nova gravação</button>
@@ -671,7 +716,7 @@ body {
     </div>
   </div>
   <div class="footer">
-    <div class="m2-ver">FALA DIREITO! · FASE 1 · v0.44</div>
+    <div class="m2-ver">FALA DIREITO! · FASE 1 · v0.44.2</div>
     <div class="m2-assinatura">
     <div class="m2-sig">
       <svg width="26" height="26" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="M2Labs"><circle cx="100" cy="100" r="92" fill="#F1E5D2" stroke="#E1CFB2" stroke-width="3"/><circle cx="71" cy="60" r="20" fill="#7E5230"/><circle cx="129" cy="60" r="20" fill="#7E5230"/><circle cx="71" cy="63" r="9" fill="#BC8E60"/><circle cx="129" cy="63" r="9" fill="#BC8E60"/><ellipse cx="100" cy="98" rx="64" ry="58" fill="#9A6638"/><path d="M47 70 Q100 35 153 70" fill="none" stroke="#85562D" stroke-width="4" stroke-linecap="round" opacity="0.5"/><ellipse cx="100" cy="128" rx="44" ry="33" fill="#CFA274"/><circle cx="76" cy="82" r="9" fill="#2B1C10"/><circle cx="124" cy="82" r="9" fill="#2B1C10"/><circle cx="79" cy="79" r="2.6" fill="#FFFFFF"/><circle cx="127" cy="79" r="2.6" fill="#FFFFFF"/><ellipse cx="100" cy="110" rx="13" ry="9" fill="#3A2415"/><rect x="91" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><rect x="101" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><line x1="64" y1="124" x2="32" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="64" y1="132" x2="33" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="124" x2="168" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="132" x2="167" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/></svg>
@@ -725,6 +770,7 @@ function mostrarTela(nome) {
   el("tela-chat").classList.toggle("hidden", nome !== "chat");
   el("tela-biblioteca").classList.toggle("hidden", nome !== "biblioteca");
   el("tela-preparar").classList.toggle("hidden", nome !== "preparar");
+  el("tela-saude").classList.toggle("hidden", nome !== "saude");
   document.querySelectorAll(".desktop-nav [data-tela]").forEach((b) => b.classList.toggle("on", b.dataset.tela === nome));
 }
 
@@ -897,6 +943,9 @@ function renderResultado(d) {
   const entrega = macro.entrega || {};
   const itens = Array.isArray(d.itens) ? d.itens : [];
   const treino = d.modo === "treino";
+  const falhou = !treino && (d.resumo === "Não consegui interpretar o veredicto." || (!Object.keys(macro).length && !itens.length && !d.plano?.foco));
+  el("laudoFalhou").classList.toggle("hidden", !falhou);
+  el("conteudoLaudo").classList.toggle("hidden", falhou);
   el("treinoResultadoAviso").classList.toggle("hidden", !treino);
   el("acaoVoltarPrep").classList.toggle("hidden", !treino);
   el("btnChat").classList.toggle("hidden", treino);
@@ -1153,6 +1202,11 @@ async function reanalisar() {
     el("ctxStatus").textContent = "Erro: " + e.message;
   }
 }
+el("btnTentarLaudo").addEventListener("click", () => {
+  if (!ultimaSessao?.turnos) return;
+  modoRejulgar = true;
+  reanalisar();
+});
 function substituirHistorico(idx, d) {
   try {
     const hist = JSON.parse(localStorage.getItem("fd_hist") || "[]");
@@ -1595,6 +1649,90 @@ el("libResultado").addEventListener("click", (e) => {
   if (b) alterarFilaBiblioteca(b.dataset.libFila, Number(b.dataset.libItem));
 });
 
+// ---- Saúde do sistema: conexões reais + capacidades deste aparelho ----
+let healthBusy = false;
+const HEALTH_LABELS = {
+  backend: "Aplicativo e Cloudflare",
+  database: "Banco de conversas",
+  elevenlabs: "Transcrição · ElevenLabs",
+  anthropic: "Mentor · Anthropic",
+  microphone: "Microfone neste aparelho",
+  storage: "Armazenamento local",
+};
+function healthCard(chave, item) {
+  const status = ["ok", "warn", "error"].includes(item?.status) ? item.status : "warn";
+  const latency = Number.isFinite(item?.latency_ms) ? `${item.latency_ms} ms` : "";
+  return `<section class="health-card ${status}"><span class="health-dot" aria-hidden="true"></span><div><div class="health-name">${esc(HEALTH_LABELS[chave] || chave)}</div><div class="health-detail">${esc(item?.detail || "Sem informação")}</div></div><span class="health-latency">${esc(latency)}</span></section>`;
+}
+async function checkDeviceHealth() {
+  const result = {};
+  if (!navigator.mediaDevices?.getUserMedia) {
+    result.microphone = { status: "error", detail: "Navegador sem suporte ao microfone", latency_ms: null };
+  } else {
+    result.microphone = { status: "ok", detail: "Recurso disponível neste aparelho", latency_ms: null };
+    try {
+      const permission = await navigator.permissions?.query?.({ name: "microphone" });
+      if (permission?.state === "denied") result.microphone = { status: "error", detail: "Permissão bloqueada no navegador", latency_ms: null };
+      else if (permission?.state === "prompt") result.microphone = { status: "warn", detail: "Permissão será pedida ao gravar", latency_ms: null };
+      else if (permission?.state === "granted") result.microphone.detail = "Permissão concedida";
+    } catch (e) {}
+  }
+  try {
+    const probe = "fd_health_probe";
+    localStorage.setItem(probe, "ok");
+    localStorage.removeItem(probe);
+    const estimate = await navigator.storage?.estimate?.();
+    const usedMb = estimate?.usage ? Math.max(0.1, estimate.usage / 1048576).toFixed(1) : "";
+    result.storage = { status: "ok", detail: usedMb ? `Disponível · ${usedMb} MB usados pelo site` : "Disponível para gravações e histórico", latency_ms: null };
+  } catch (e) {
+    result.storage = { status: "error", detail: "Não foi possível gravar dados locais", latency_ms: null };
+  }
+  return result;
+}
+async function verificarSaude() {
+  if (healthBusy) return;
+  healthBusy = true;
+  el("btnHealthCheck").disabled = true;
+  el("btnHealthCheck").textContent = "Verificando…";
+  el("healthSummary").textContent = "Consultando conexões e este aparelho…";
+  el("healthGrid").innerHTML = Object.keys(HEALTH_LABELS).map((k) => healthCard(k, { status: "warn", detail: "Verificando…" })).join("");
+  try {
+    const [response, device] = await Promise.all([
+      fetch("/api/health", { headers: { "x-app-pass": APP_PASS } }),
+      checkDeviceHealth(),
+    ]);
+    if (response.status === 401) { sairAcesso("Senha incorreta. Entre de novo."); return; }
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.erro || `HTTP ${response.status}`);
+    const checks = Object.assign({}, data.checks || {}, device);
+    el("healthGrid").innerHTML = Object.keys(HEALTH_LABELS).map((k) => healthCard(k, checks[k])).join("");
+    const problems = Object.values(checks).filter((x) => x?.status === "error").length;
+    const warnings = Object.values(checks).filter((x) => x?.status === "warn").length;
+    const checked = data.checked_at ? new Date(data.checked_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "agora";
+    const version = data.deploy_commit ? ` · versão ${String(data.deploy_commit).slice(0, 7)}` : "";
+    el("healthSummary").textContent = problems ? `${problems} conexão(ões) com problema · verificado às ${checked}${version}` : warnings ? `Serviços online, com ${warnings} aviso(s) · ${checked}${version}` : `Tudo online · verificado às ${checked}${version}`;
+  } catch (e) {
+    const device = await checkDeviceHealth();
+    const failed = {
+      backend: { status: "error", detail: "Não consegui consultar o servidor", latency_ms: null },
+      database: { status: "warn", detail: "Não verificado", latency_ms: null },
+      elevenlabs: { status: "warn", detail: "Não verificado", latency_ms: null },
+      anthropic: { status: "warn", detail: "Não verificado", latency_ms: null },
+      ...device,
+    };
+    el("healthGrid").innerHTML = Object.keys(HEALTH_LABELS).map((k) => healthCard(k, failed[k])).join("");
+    el("healthSummary").textContent = "A verificação não foi concluída: " + e.message;
+  } finally {
+    healthBusy = false;
+    el("btnHealthCheck").disabled = false;
+    el("btnHealthCheck").textContent = "Verificar novamente";
+  }
+}
+function abrirSaude() { mostrarTela("saude"); verificarSaude(); }
+el("btnSaude").addEventListener("click", abrirSaude);
+el("btnSaudeVoltar").addEventListener("click", () => mostrarTela("gravador"));
+el("btnHealthCheck").addEventListener("click", verificarSaude);
+
 // Navegação lateral para desktop. As ações específicas continuam disponíveis no celular.
 document.querySelectorAll(".desktop-nav [data-tela]").forEach((b) => {
   b.addEventListener("click", () => {
@@ -1604,6 +1742,7 @@ document.querySelectorAll(".desktop-nav [data-tela]").forEach((b) => {
     if (tela === "regras") renderRegras();
     if (tela === "biblioteca") renderBiblioteca();
     if (tela === "preparar") { modoTreino = false; el("treinoBanner").classList.add("hidden"); carregarPreparacoes(); }
+    if (tela === "saude") { verificarSaude(); }
     mostrarTela(tela);
   });
 });
