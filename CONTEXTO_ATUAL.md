@@ -1,7 +1,7 @@
 # Fala Direito! — Contexto Atual
 
-**Atualizado em:** 28/09/2026
-**Estado em produção:** v0.44.2 — saúde do sistema, recuperação de laudo e UX móvel
+**Atualizado em:** 30/09/2026
+**Estado em produção:** v0.46 — critérios v3 (regras com contexto) e checagem de coerência do laudo
 
 ## Propósito do projeto
 
@@ -136,7 +136,40 @@ Critério de aceitação: uma nova lição deve melhorar de forma concreta a cla
 - O limite de saída do Mentor foi ampliado e ocorrências da mesma regra passam a ser agrupadas para reduzir o risco de truncamento em conversas longas.
 - O laudo ganhou o botão **Copiar transcrição**, inclusive no histórico.
 
-## Próxima etapa
+## Implementado nesta etapa (v0.46) — critérios v3
+
+Motivo: o laudo de 30/09 ("Oportunidade comunicada com clareza") mostrou que o sistema avaliava errado: tratou pergunta aberta de líder como pedido de aprovação (A2), puniu a mesma abertura em A9 e A7, contou "acho que era gerente" como falta de convicção (A14), deu 0 acertos com mensagem "passou" e marcou "recorrente" sem prova.
+
+Causas encontradas:
+
+1. As regras eram listas de palavras, sem dizer quando NÃO é erro.
+2. O contexto que o Marcelo digita antes da análise chegava ao Mentor, mas o prompt não mandava usá-lo para calibrar as regras.
+3. O Mentor não classificava a função da fala (pergunta genuína x validação; âncora x repetição; posição própria x dúvida factual).
+4. Gagueira era tratada como erro de regra (A7).
+5. O contador automático contava a palavra, não o uso, e tinha bug: "né" e "aí" nunca eram contados (limite de palavra do JavaScript não reconhece acento).
+6. Nada no código conferia a coerência do laudo antes de salvar.
+
+O que mudou:
+
+- **Fonte única das regras:** `functions/api/_regras.js`. O Mentor (análise, chat, ensaio, preparação, biblioteca) e a tela do app (`/api/regras`) leem daqui. `MANUAL_REGRAS_v3.md` é gerado a partir dele.
+- **Cada regra tem:** objetivo, pré-requisito, quando é erro, quando NÃO é erro, como muda com a situação, com qual regra não confundir e gravidade.
+- **Princípios do Mentor:** situação primeiro (usa o campo de contexto), função antes da forma, teste de impacto, oralidade não é erro, uma passagem uma regra, varredura das 14 regras com status (acerto, erro, atenção, não se aplica, não avaliável), números automáticos como candidatos, recorrência só com a mesma regra datada.
+- **Checagem no código (`consolidarVeredicto`):** remove o mesmo trecho em duas regras, rebaixa "recorrente" sem prova, calcula o placar pelo que foi avaliado (acabou o "14 regras" fixo) e avisa quando a mensagem passou sem nenhum acerto. Os avisos aparecem no laudo.
+- **Contagem:** corrigido o bug de acento; a tela mostra a contagem confirmada pelo Mentor e o "eu acho" só em posição própria.
+- **Ritmo:** comparado com a mediana pessoal (3+ sessões). Sem histórico, usa as faixas antigas como provisórias.
+- **Chat do Mentor:** revisa o laudo contra a transcrição quando contestado e admite erro com clareza (antes era instruído a "defender").
+- **Memória na reavaliação:** usa só sessões anteriores à conversa reavaliada; a reavaliação roda da mais antiga para a mais nova.
+- **ANALYSIS_VERSION v0.46:** ao abrir o app, todo o histórico é reavaliado com os critérios novos (custo: uma chamada ao Mentor por conversa).
+
+Observação: existe no GitHub a branch `feat/gravacao-retomavel-v045` (gravação retomável, 27/08), nunca integrada. Por isso esta versão foi numerada v0.46.
+
+## Próxima etapa (v0.46)
+
+- Abrir o app, deixar a reavaliação do histórico terminar e conferir a conversa de 30/09: A2 só no "Tá bom?", sem A7 duplicado, A14 só em posição própria, acertos maiores que zero, padrão "sessão" para A9.
+- Se algum laudo mostrar "Checagem automática", usar "Corrigir contexto e reanalisar".
+- Calibrar o limite de densidade de A12 com a média pessoal depois de algumas sessões.
+
+## Próxima etapa (anterior)
 
 - Abrir ou atualizar a v0.44 e confirmar que conversas já salvas aparecem como `0 enviada(s) agora`.
 - Criar uma preparação real, corrigir pelo menos uma informação no plano e executar um ensaio completo.

@@ -30,7 +30,7 @@
    ARQUITETURA (PRD jun/2026):
    - Frontend = Cloudflare Pages. Backend = Pages Function /api/analyze (cofre/Worker).
    - Fase 1: GRAVAR DENTRO DO APP (MediaRecorder) -> Function transcreve (AssemblyAI)
-     -> Mentor (Claude API) aplica MANUAL_REGRAS_v2.md -> feedback no CONTRATO abaixo.
+     -> Mentor (Claude API) aplica o manual v3 (functions/api/_regras.js) -> feedback no CONTRATO abaixo.
    - getUserMedia exige HTTPS: só funciona no domínio publicado, não em file://.
 
    CONTRATO DO FEEDBACK (o backend do Passo 3 devolve exatamente este JSON):
@@ -490,7 +490,7 @@ body {
   <img class="sp-castor" src="m2labs-castor.png" alt="M2Labs" width="108" height="108">
   <div class="sp-word">M<span class="sp-2">2</span>Labs</div>
   <div class="sp-sign">por Marcelo Mendes</div>
-  <div class="sp-app">Fala direito! · v0.44.2</div>
+  <div class="sp-app">Fala direito! · v0.46</div>
 </div>
 <div class="wrap">
   <div id="gate" class="gate hidden">
@@ -669,7 +669,7 @@ body {
         <div class="placar">
           <div class="kpi ok"><div class="num" id="kpiAcertos">0</div><div class="lbl">Acertos</div></div>
           <div class="kpi erro"><div class="num" id="kpiErros">0</div><div class="lbl">Erros</div></div>
-          <div class="kpi neutro"><div class="num" id="kpiRegras">0</div><div class="lbl">Regras</div></div>
+          <div class="kpi neutro"><div class="num" id="kpiRegras">0</div><div class="lbl">Regras avaliadas</div></div>
         </div>
 
         <div class="sec-h">1. Visão macro</div>
@@ -716,7 +716,7 @@ body {
     </div>
   </div>
   <div class="footer">
-    <div class="m2-ver">FALA DIREITO! · FASE 1 · v0.44.2</div>
+    <div class="m2-ver">FALA DIREITO! · FASE 1 · v0.46</div>
     <div class="m2-assinatura">
     <div class="m2-sig">
       <svg width="26" height="26" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="M2Labs"><circle cx="100" cy="100" r="92" fill="#F1E5D2" stroke="#E1CFB2" stroke-width="3"/><circle cx="71" cy="60" r="20" fill="#7E5230"/><circle cx="129" cy="60" r="20" fill="#7E5230"/><circle cx="71" cy="63" r="9" fill="#BC8E60"/><circle cx="129" cy="63" r="9" fill="#BC8E60"/><ellipse cx="100" cy="98" rx="64" ry="58" fill="#9A6638"/><path d="M47 70 Q100 35 153 70" fill="none" stroke="#85562D" stroke-width="4" stroke-linecap="round" opacity="0.5"/><ellipse cx="100" cy="128" rx="44" ry="33" fill="#CFA274"/><circle cx="76" cy="82" r="9" fill="#2B1C10"/><circle cx="124" cy="82" r="9" fill="#2B1C10"/><circle cx="79" cy="79" r="2.6" fill="#FFFFFF"/><circle cx="127" cy="79" r="2.6" fill="#FFFFFF"/><ellipse cx="100" cy="110" rx="13" ry="9" fill="#3A2415"/><rect x="91" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><rect x="101" y="120" width="8" height="23" rx="2.5" fill="#FFFDF6" stroke="#DBCDB0" stroke-width="1"/><line x1="64" y1="124" x2="32" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="64" y1="132" x2="33" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="124" x2="168" y2="116" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/><line x1="136" y1="132" x2="167" y2="135" stroke="#8C6B4A" stroke-width="2" stroke-linecap="round" opacity="0.6"/></svg>
@@ -751,7 +751,7 @@ let identidades = [];
 let ultimoLaudo = null;
 let chatMsgs = [];
 let numPessoas = 2;
-const ANALYSIS_VERSION = "v0.42";
+const ANALYSIS_VERSION = "v0.46"; // critérios v3: muda => reavalia o histórico
 let syncHistoricoRodando = false;
 let preparacaoAtiva = null;
 let modoTreino = false;
@@ -879,40 +879,73 @@ async function enviarAudio() {
   }
 }
 
-const REGRAS = {
-  A1: "Não explicar demais — diga uma vez e pare; cada explicação vira uma brecha.",
-  A2: "Não pedir aprovação no fim ('faz sentido?', 'tá certo?').",
-  A3: "Não se justificar sob crítica/provocação; não reaja no impulso.",
-  A4: "Não pedir desculpa à toa ('desculpa incomodar', 'só queria').",
-  A5: "Não revelar demais (oversharing) seu estado/insegurança.",
-  A6: "Não falar pra tapar o silêncio nem negociar contra si; segure a pausa.",
-  A7: "Falar o necessário — frases curtas, sem ruído.",
-  A8: "Clareza com critério — o quê + quando + critério de decisão.",
-  A9: "Começar pela conclusão — o ponto já na 1ª frase.",
-  A10: "Não dar 'sim automático' — pause antes de aceitar.",
-  A11: "Dizer não sem discurso — recusa curta, sem justificativa culpada.",
-  A12: "Muletas de linguagem ('né', 'tipo', 'então', 'aí', 'sabe').",
-  A13: "Interromper vs interjetar — deixe o outro terminar.",
-  A14: "Linguagem de convicção — verbos firmes ('eu vou', 'decidi') no lugar de hesitantes ('acho', 'espero', 'talvez', 'queria').",
+/* REGRAS v3 — fonte única em functions/api/_regras.js.
+   Estes textos são só o fallback offline; ao abrir, o app busca /api/regras
+   e substitui. Não edite regra aqui: edite _regras.js (senão app e Mentor
+   voltam a divergir, como aconteceu até a v0.44). */
+let REGRAS = {
+  A1: "Não explicar demais: Diga uma vez e confie no conteúdo. Repetir sem acrescentar nada vira brecha.",
+  A2: "Não pedir aprovação: Não peça aval para a sua própria posição ('faz sentido?', 'tá bom?'). Pergunta aberta para ouvir ideias não é pedir aprovação.",
+  A3: "Não se justificar sob crítica: Sob crítica ou provocação, não reaja no impulso nem empilhe defesas.",
+  A4: "Não pedir desculpa demais: Desculpa só para erro real. Sem 'só queria' e sem pedir licença para falar.",
+  A5: "Não revelar demais: Não exponha estado emocional ou insegurança que não serve ao objetivo da conversa.",
+  A6: "Não tapar o silêncio / não negociar contra si: Depois de propor, segure o silêncio. Não faça concessão que ninguém pediu.",
+  A7: "Falar o necessário: Cada frase carrega informação. Frase longa e clara não é erro; gagueira também não.",
+  A8: "Clareza com critério: Ao delegar ou definir próximo passo: o quê + quando + critério.",
+  A9: "Começar pela conclusão quando couber: O ouvinte precisa saber cedo o que você quer dele. Contexto antes do ponto só se ele precisar para entender.",
+  A10: "Não dar 'sim automático': Antes de aceitar algo com custo, prazo ou risco, pause e avalie.",
+  A11: "Dizer não sem discurso: Recusa curta: um motivo objetivo e, se couber, uma alternativa.",
+  A12: "Muletas de linguagem: Meta zero. Conta só quando a palavra é enchimento: 'né?', 'tipo', 'então'/'aí' emendando frases, 'cara' vocativo, 'sabe?'/'entendeu?' no fim.",
+  A13: "Interromper vs interjetar: Deixe o outro concluir a ideia antes de falar.",
+  A14: "Linguagem de convicção: Sem 'eu acho'/'acho que' antes de posição, recomendação ou decisão sua. Dúvida real de fato não entra.",
 };
-const REGRA_TREINO = {
-  A1: "Você repete a ideia em vários ângulos pra se sentir entendido. Treino: diga o ponto UMA vez e cale. Quem precisar, pergunta. Conte até 3 antes de emendar qualquer 'porque'.",
-  A2: "Fechar com 'faz sentido?' devolve o poder pro outro. Treino: termine com ponto final e silêncio. Quem convence é o conteúdo, não a busca por aval.",
-  A3: "Sob alfinetada você se defende e perde terreno. Treino: respire e devolva uma pergunta ('o que te faz dizer isso?') em vez de se explicar.",
-  A4: "'Desculpa incomodar' diz que você é um estorvo. Treino: troque por 'tenho uma pergunta' e vá direto. Desculpa só pra erro real.",
-  A5: "Expor seu estado/limite te deixa lido e vulnerável. Treino: separe o privado do público — o que você sente não precisa virar legenda da conversa.",
-  A6: "Você enche o silêncio e acaba negociando contra si. Treino: depois de propor ou perguntar, conte até 7 calado. O silêncio trabalha por você.",
-  A7: "Frases longas viram ruído e a mensagem se perde. Treino: uma ideia por frase, corte adjetivo e enchimento. Se dá pra cortar uma palavra, corte.",
-  A8: "Pedido vago gera retrabalho e perda de autoridade. Treino: sempre o quê + quando + critério ('faça X até sexta, priorizando Y').",
-  A9: "Você enrola antes de chegar no ponto. Treino: 1ª frase = o que você quer/conclui. O contexto vem depois, só se precisar.",
-  A10: "Aceitar no impulso vira arrependimento e ressentimento. Treino: 'deixa eu ver e te respondo' ou pause 3s antes do sim.",
-  A11: "Recusa cheia de justificativa soa culpada e abre brecha. Treino: 3 frases secas. 'Não consigo assumir isso agora.' Ponto.",
-  A12: "'né, tipo, então, aí' viciam e enfraquecem a fala. Treino: troque a muleta por uma micro-pausa. Silêncio é melhor que muleta.",
-  A13: "Cortar antes do outro terminar sinaliza ansiedade. Treino: deixe a última palavra dele 'cair' antes de falar; use 'quando você disse X...'.",
-  A14: "'Eu acho/espero/talvez' enfraquece quando você tem certeza. Treino: afirme — 'eu vou', 'eu decidi', 'minha recomendação é'. Tire o condicional do que é firme.",
+let REGRA_TREINO = {
+  A1: "Diga o ponto UMA vez. Se for repetir, que seja de propósito: uma âncora curta ou o resumo do fechamento. Explicação extra só quando alguém pedir.",
+  A2: "Depois de afirmar sua posição, pare e segure o silêncio. Se quiser ouvir o grupo, pergunte de forma aberta ('que objeção vocês veem?') ou peça decisão ('quem topa?').",
+  A3: "Respire e devolva uma pergunta ('o que te faz dizer isso?'). Fato errado se corrige em uma frase.",
+  A4: "Troque 'desculpa incomodar' por 'tenho uma pergunta' e vá direto.",
+  A5: "Separe o que o outro precisa saber (prazo, capacidade) do que é só desabafo.",
+  A6: "Depois de propor ou perguntar, conte até 7 calado. O silêncio trabalha por você.",
+  A7: "Corte enchimento e digressão. Gagueira se trata com pausa antes de começar, não com frase curta.",
+  A8: "Feche todo pedido com 'o quê, até quando e como vou saber que está bom'.",
+  A9: "Teste antes de abrir a boca: 'se eu cortar esse contexto, o ouvinte perde algo de que precisa?' Se não perde, comece pelo ponto. Storytelling curto que leva ao ponto é permitido.",
+  A10: "'Deixa eu ver e te respondo' ou 3 segundos de pausa antes do sim.",
+  A11: "'Não consigo até sexta; consigo na terça.' Sem desculpa culpada.",
+  A12: "Troque a muleta por uma micro-pausa. Silêncio é melhor que muleta.",
+  A13: "Deixe a última palavra dele 'cair'; retome com 'quando você disse X...'.",
+  A14: "Afirme o que você sustenta: 'minha recomendação é', 'com a Lumiás é melhor'. Para dúvida real, use 'se não me engano'.",
 };
+async function carregarRegras() {
+  try {
+    const r = await fetch("/api/regras", { cache: "no-store" });
+    if (!r.ok) return;
+    const d = await r.json();
+    if (d && d.regras && d.treino) { REGRAS = d.regras; REGRA_TREINO = d.treino; }
+  } catch (e) {}
+}
+carregarRegras();
 
+/* RITMO: comparado com a MÉDIA PESSOAL (mediana das suas sessões, com 3+ sessões).
+   A métrica exclui pausas longas (é velocidade de articulação), por isso faixas
+   fixas de livro não servem de régua. Sem histórico suficiente, usa faixas
+   provisórias e avisa. */
+function baseRitmo() {
+  try {
+    const hist = JSON.parse(localStorage.getItem("fd_hist") || "[]");
+    const v = hist.map((h) => Number(h.metricas?.ritmo_ppm || 0)).filter((x) => x > 0).sort((a, b) => a - b);
+    if (v.length < 3) return 0;
+    const m = Math.floor(v.length / 2);
+    return v.length % 2 ? v[m] : Math.round((v[m - 1] + v[m]) / 2);
+  } catch (e) { return 0; }
+}
 function zonaRitmo(p) {
+  const base = baseRitmo();
+  if (base) {
+    const r = p / base;
+    if (r < 0.85) return { cls: "zona-aten", txt: `abaixo do seu normal (${base})` };
+    if (r > 1.15) return { cls: "zona-aten", txt: `acima do seu normal (${base})` };
+    return { cls: "zona-ok", txt: `no seu ritmo (${base})` };
+  }
   if (p < 110) return { cls: "zona-ruim", txt: "arrastado" };
   if (p < 130) return { cls: "zona-aten", txt: "meio lento" };
   if (p <= 150) return { cls: "zona-ok", txt: "zona de confiança" };
@@ -975,6 +1008,10 @@ function renderResultado(d) {
     const via = d.voce.como === "marcador" ? "" : " (auto)";
     mWrap.innerHTML += `<span class="m">🎙️ você = ${esc(d.voce.locutor)}${via}</span>`;
   }
+  const sit = d.situacao || {};
+  if (sit.tipo || sit.papel) {
+    mWrap.innerHTML += `<span class="m">📍 ${esc([sit.tipo, sit.papel].filter(Boolean).join(" · "))}${sit.fonte === "inferido" ? " (inferido)" : ""}</span>`;
+  }
   if (d.metricas) {
     const m = d.metricas;
     if (m.ritmo_ppm) mWrap.innerHTML += `<span class="m ${zonaRitmo(m.ritmo_ppm).cls}">🏃 ${esc(m.ritmo_ppm)} ppm · ${esc(zonaRitmo(m.ritmo_ppm).txt)}</span>`;
@@ -982,20 +1019,27 @@ function renderResultado(d) {
   }
 
   const contagens = d.contagens || {};
-  const mapaMuletas = d.metricas?.muletas || contagens.muletas || {};
+  // v0.46: mostra a contagem CONFIRMADA pelo Mentor (uso real); a automática é só candidata.
+  const temConfirmada = Array.isArray(contagens.muletas) && contagens.muletas.length;
+  const mapaMuletas = temConfirmada ? contagens.muletas : (d.metricas?.muletas || contagens.muletas || {});
   const paresMuletas = Array.isArray(mapaMuletas)
     ? mapaMuletas.map((x) => [x.termo, x.quantidade])
     : Object.entries(mapaMuletas);
   const muletasAtivas = paresMuletas.filter(([, n]) => Number(n) > 0);
-  const euAcho = Number(d.metricas?.eu_acho ?? contagens.eu_acho ?? 0);
+  const euAcho = Number(temConfirmada ? (contagens.eu_acho ?? 0) : (d.metricas?.eu_acho ?? contagens.eu_acho ?? 0));
   const blocoContagens = el("blocoContagens");
   blocoContagens.innerHTML = '<div class="sec-h">Micro-hábitos — meta: zero</div><div class="contagens">' +
     (muletasAtivas.length ? muletasAtivas.map(([termo, n]) => `<span class="contagem"><strong>${esc(n)}×</strong> ${esc(termo)}</span>`).join("") : '<span class="contagem zero"><strong>0×</strong> muletas detectadas</span>') +
-    `<span class="contagem ${euAcho === 0 ? "zero" : ""}"><strong>${euAcho}×</strong> “eu acho”</span>` +
+    `<span class="contagem ${euAcho === 0 ? "zero" : ""}"><strong>${euAcho}×</strong> “eu acho” em posição própria</span>` +
+    (temConfirmada ? "" : '<span class="contagem zero">contagem automática (não confirmada)</span>') +
     '</div>';
 
   const bloco = el("blocoItens");
   bloco.innerHTML = '<div class="sec-h">4. Evidências e ajustes</div>';
+  const avisos = Array.isArray(d.avisos) ? d.avisos.filter(Boolean) : [];
+  if (avisos.length) {
+    bloco.innerHTML += `<div class="reflexao"><div class="t">🔎 Checagem automática do laudo</div>${avisos.map((a) => esc(a)).join("<br>")}</div>`;
+  }
   if (!itens.length) {
     bloco.innerHTML += '<p class="ctx-sub" style="text-align:left;">Nenhum ajuste comprovado foi listado nesta análise.</p>';
   } else {
@@ -1271,12 +1315,13 @@ function calcMetricasJS(words, alvo) {
   const listaMuletas = ["né", "tipo", "então", "aí", "sabe", "entendeu", "cara"]; let h = 0;
   const muletas = {};
   for (const m of listaMuletas) {
-    const re = new RegExp("\\b" + m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "g");
+    // Limite de palavra com acento ("\\b" não reconhecia "né" e "aí"). Números são CANDIDATOS: o Mentor confirma o uso.
+    const re = new RegExp("(?<![\\p{L}\\p{N}])" + m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(?![\\p{L}\\p{N}])", "gu");
     const n = (txt.match(re) || []).length;
     muletas[m] = n;
     h += n;
   }
-  const eu_acho = (txt.match(/\b(eu\s+acho|acho\s+que)\b/g) || []).length;
+  const eu_acho = (txt.match(/(?<![\p{L}])(?:eu\s+acho(?:\s+que)?|acho\s+que)(?![\p{L}])/gu) || []).length;
   return { ritmo_ppm: ritmo, pausas: p ? `${p} (maior ${maior.toFixed(1)}s)` : "nenhuma longa", hesitacao: h, muletas, eu_acho };
 }
 const CORES = [
@@ -1778,7 +1823,10 @@ function laudoTexto(d) {
   if (!d) return "";
   const macro = d.macro || {};
   let t = "Resumo: " + (d.resumo || "") + "\nResultado: " + ((macro.mensagem && macro.mensagem.avaliacao) || "") + "\nEstrutura: " + ((macro.estrutura && macro.estrutura.avaliacao) || "") + "\nPadrão: " + ((d.padrao && d.padrao.leitura) || "") + "\n";
+  const sit = d.situacao || {};
+  if (sit.tipo || sit.papel || sit.objetivo) t += `Situação: ${[sit.tipo, sit.papel, sit.objetivo].filter(Boolean).join(" | ")}\n`;
   (d.itens || []).forEach((it) => { t += `[${it.regra} ${it.tipo}] ${it.titulo || ""}: "${it.trecho || ""}" — ${it.comentario || ""}\n`; });
+  (d.regras || []).forEach((r) => { t += `(${r.regra}: ${r.status}${r.motivo ? " — " + r.motivo : ""})\n`; });
   return t;
 }
 function renderChat() {
@@ -1943,7 +1991,9 @@ async function sincronizarHistorico() {
     }
     locais = [...mapaLocal.values()].filter((h) => !apagados.has(h.id));
 
-    const pendentes = locais.filter((h) => porId.has(h.id) && h.analysis_version !== ANALYSIS_VERSION && h._sessao?.turnos);
+    const pendentes = locais
+      .filter((h) => porId.has(h.id) && h.analysis_version !== ANALYSIS_VERSION && h._sessao?.turnos)
+      .sort((a, b) => new Date(a.data || 0) - new Date(b.data || 0)); // do mais antigo ao mais novo
     for (let i = 0; i < pendentes.length; i++) {
       setDbStatus(`Reavaliando conversas antigas no novo modelo: ${i + 1}/${pendentes.length}…`, "warn");
       const r = await fetch("/api/history-reanalyze", {
