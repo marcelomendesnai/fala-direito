@@ -1,6 +1,6 @@
 // /api/analyze — Scribe (transcrição+diarização) -> identifica Marcelo via contexto -> Mentor.
 // Devolve _sessao (turnos + métricas + dominante) p/ permitir reanalisar sem re-transcrever.
-import { chamarMentor, normalizarTituloConversa } from "./_mentor.js";
+import { chamarMentor, consolidarVeredicto, normalizarTituloConversa } from "./_mentor.js";
 
 const STT_URL = "https://api.elevenlabs.io/v1/speech-to-text";
 const STT_MODEL = "scribe_v2";
@@ -42,14 +42,20 @@ export async function onRequestPost(context) {
 
     const turnos = construirTurnos(words, labelOf);
 
-    const veredicto = await chamarMentor({ turnos, contexto, dominante, metricasPorLabel, rigor, key: anthropicKey, memoria });
+    const veredicto = consolidarVeredicto(
+      await chamarMentor({ turnos, contexto, dominante, metricasPorLabel, rigor, key: anthropicKey, memoria }),
+      { memoria },
+    );
     let locutor = (veredicto.locutor || "").toUpperCase().replace(/[^A-Z]/g, "") || dominante;
     if (!porLabel[locutor]) locutor = dominante;
 
     const itens = veredicto.itens || [];
     return json({
       nome: normalizarTituloConversa(veredicto.titulo_conversa),
-      placar: { acertos: itens.filter((i) => i.tipo === "acerto").length, erros: itens.filter((i) => i.tipo === "erro").length, regras_avaliadas: 14 },
+      placar: veredicto.placar,
+      situacao: veredicto.situacao || {},
+      regras: veredicto.regras || [],
+      avisos: veredicto.avisos || [],
       resumo: veredicto.resumo || "—",
       macro: veredicto.macro || {},
       metricas: metricasPorLabel[locutor] || { ritmo_ppm: 0, pausas: "—", hesitacao: 0 },
@@ -111,13 +117,16 @@ function calcMetricas(allWords, alvo, labelOf) {
   const txt = " " + sorted.filter((w) => labelOf(w) === alvo).map((w) => w.text).join(" ").toLowerCase() + " ";
   let hesitacao = 0;
   const muletas = {};
+  // Limite de palavra com suporte a acento: "\\b" do JavaScript não reconhece
+  // "é"/"í" como letra, e por isso "né" e "aí" nunca eram contados (bug até v0.44).
   for (const m of MULETAS) {
-    const re = new RegExp("\\b" + m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "g");
+    const re = new RegExp("(?<![\\p{L}\\p{N}])" + m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(?![\\p{L}\\p{N}])", "gu");
     const n = (txt.match(re) || []).length;
     muletas[m] = n;
     hesitacao += n;
   }
-  const eu_acho = (txt.match(/\b(eu\s+acho|acho\s+que)\b/g) || []).length;
+  // Mesma lógica com suporte a acento. Continua sendo CANDIDATO: o Mentor separa posição própria de dúvida factual.
+  const eu_acho = (txt.match(/(?<![\p{L}])(?:eu\s+acho(?:\s+que)?|acho\s+que)(?![\p{L}])/gu) || []).length;
   return { ritmo_ppm, pausas: pausas ? `${pausas} (maior ${maior.toFixed(1)}s)` : "nenhuma longa", hesitacao, muletas, eu_acho };
 }
 

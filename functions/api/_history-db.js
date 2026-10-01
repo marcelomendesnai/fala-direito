@@ -1,4 +1,6 @@
-export const ANALYSIS_VERSION = "v0.42";
+// v0.46: critérios v3 (regras com contexto). Mudar este valor faz o app
+// reavaliar automaticamente o histórico com o modelo novo.
+export const ANALYSIS_VERSION = "v0.46";
 
 export function readKey(env, name) {
   if (env[name]) return env[name];

@@ -1,5 +1,5 @@
 // /api/rejudge — reanalisa a MESMA conversa com um contexto corrigido (só roda o Mentor).
-import { chamarMentor, normalizarTituloConversa } from "./_mentor.js";
+import { chamarMentor, consolidarVeredicto, normalizarTituloConversa } from "./_mentor.js";
 
 function readKey(env, name) {
   if (env[name]) return env[name];
@@ -27,14 +27,20 @@ export async function onRequestPost(context) {
     const memoria = (body.memoria || "").toString();
     if (!turnos) return json({ erro: "Sem transcrição para reanalisar." }, 400);
 
-    const veredicto = await chamarMentor({ turnos, contexto, dominante, metricasPorLabel, rigor, key: anthropicKey, memoria });
+    const veredicto = consolidarVeredicto(
+      await chamarMentor({ turnos, contexto, dominante, metricasPorLabel, rigor, key: anthropicKey, memoria }),
+      { memoria },
+    );
     let locutor = (veredicto.locutor || "").trim();
     if (!metricasPorLabel[locutor]) locutor = dominante;
 
     const itens = veredicto.itens || [];
     return json({
       nome: normalizarTituloConversa(veredicto.titulo_conversa),
-      placar: { acertos: itens.filter((i) => i.tipo === "acerto").length, erros: itens.filter((i) => i.tipo === "erro").length, regras_avaliadas: 14 },
+      placar: veredicto.placar,
+      situacao: veredicto.situacao || {},
+      regras: veredicto.regras || [],
+      avisos: veredicto.avisos || [],
       resumo: veredicto.resumo || "—",
       macro: veredicto.macro || {},
       metricas: metricasPorLabel[locutor] || { ritmo_ppm: 0, pausas: "—", hesitacao: 0 },

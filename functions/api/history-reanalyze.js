@@ -1,5 +1,5 @@
 // /api/history-reanalyze — reaplica o mentor atual sobre uma transcrição já salva.
-import { chamarMentor, normalizarTituloConversa } from "./_mentor.js";
+import { chamarMentor, consolidarVeredicto, normalizarTituloConversa } from "./_mentor.js";
 import { ANALYSIS_VERSION, authorize, ensureSchema, getDb, json, readKey, rowToHistory } from "./_history-db.js";
 
 export async function onRequestPost(context) {
@@ -20,8 +20,8 @@ export async function onRequestPost(context) {
 
     const metricasPorLabel = parse(row.metrics_json, {});
     const dominante = row.dominant || "A";
-    const memoria = await montarMemoria(db, id);
-    const veredicto = await chamarMentor({
+    const memoria = await montarMemoria(db, id, row.created_at);
+    const veredictoBruto = await chamarMentor({
       turnos: row.transcript,
       contexto: row.context || "",
       dominante,
@@ -30,17 +30,17 @@ export async function onRequestPost(context) {
       key: anthropicKey,
       memoria,
     });
+    const veredicto = consolidarVeredicto(veredictoBruto, { memoria });
     let locutor = String(veredicto.locutor || "").trim();
     if (!metricasPorLabel[locutor]) locutor = dominante;
     const itens = Array.isArray(veredicto.itens) ? veredicto.itens : [];
     const previous = parse(row.analysis_json, {});
     const analysis = Object.assign({}, previous, {
       nome: row.name || previous.nome || normalizarTituloConversa(veredicto.titulo_conversa),
-      placar: {
-        acertos: itens.filter((i) => i.tipo === "acerto").length,
-        erros: itens.filter((i) => i.tipo === "erro").length,
-        regras_avaliadas: 14,
-      },
+      placar: veredicto.placar,
+      situacao: veredicto.situacao || {},
+      regras: veredicto.regras || [],
+      avisos: veredicto.avisos || [],
       resumo: veredicto.resumo || "—",
       macro: veredicto.macro || {},
       metricas: metricasPorLabel[locutor] || previous.metricas || { ritmo_ppm: 0, pausas: "—", hesitacao: 0 },
@@ -66,11 +66,14 @@ export async function onRequestPost(context) {
   }
 }
 
-async function montarMemoria(db, currentId) {
+// Memória só com sessões ANTERIORES à conversa reavaliada (antes da v0.46 entravam
+// também conversas posteriores, o que permitia "recorrência" vinda do futuro).
+async function montarMemoria(db, currentId, createdAt) {
   const result = await db.prepare(`
     SELECT created_at, name, analysis_json FROM conversations
-    WHERE id <> ? ORDER BY created_at DESC LIMIT 6
-  `).bind(currentId).all();
+    WHERE id <> ? AND deleted_at IS NULL AND created_at < ?
+    ORDER BY created_at DESC LIMIT 6
+  `).bind(currentId, createdAt || "9999").all();
   const linhas = [];
   for (const row of result.results || []) {
     const analysis = parse(row.analysis_json, {});
@@ -78,7 +81,8 @@ async function montarMemoria(db, currentId) {
       .filter((i) => ["erro", "atenção", "atencao"].includes(i.tipo) && i.regra && i.trecho)
       .slice(0, 3)
       .map((i) => `${i.regra}: “${String(i.trecho).slice(0, 160)}”`);
-    if (evidencias.length) linhas.push(`- ${row.name || row.created_at}: ${evidencias.join(" | ")}`);
+    const dt = String(row.created_at || "").slice(0, 10);
+    if (evidencias.length) linhas.push(`- ${dt} ${row.name || ""}: ${evidencias.join(" | ")}`);
   }
   return linhas.length
     ? `HISTÓRICO DE EVIDÊNCIAS (use apenas para confirmar recorrência):\n${linhas.join("\n")}`
